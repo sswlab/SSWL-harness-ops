@@ -179,22 +179,30 @@ AI가 모델 카드를 참조하여:
 #### 사용 예시
 
 ```
-교수님: "Solar Orbiter DEM에 Magnetogram을 추가하면 성능이 좋아질까?"
+교수님: "Solar Orbiter DEM 연구에서 Magnetogram을 DL 입력에
+         추가하면 합성 채널 품질이 좋아질까?"
+
+  배경: EUI/FSI는 174+304 A 2채널만 보유
+        → Pix2PixCC(DL)로 5개 합성 AIA 채널 생성 → DEM 계산
+        (Youn et al. 2025, A&A)
 
   AI → 실험 설계:
-    ├─ Baseline: EUI만으로 DEM
-    ├─ Experiment: EUI + PHI(magnetogram)로 DEM
-    └─ Reference: AIA DEM (비교 기준)
+    ├─ Baseline: AIA 171+304 → Pix2PixCC → 합성 5채널 → DEM
+    ├─ Experiment: AIA 171+304+HMI mag → Modified Pix2PixCC
+    │              → 합성 5채널 → DEM
+    └─ Reference: 실제 AIA 6채널 DEM (ground truth)
 
   AI → 실험 실행:
-    ├─ 데이터 자동 수집 (EUI, PHI, AIA)
-    ├─ 3가지 DEM 생성
-    └─ 비교 분석
+    ├─ JSOC에서 AIA 7채널 + HMI magnetogram 자동 수집
+    ├─ Pix2PixCC 학습 2회 (baseline, experiment)
+    ├─ 합성 채널 품질 비교 (CC, RMSE)
+    └─ DEM 비교 (활동영역 / 조용한 영역 분리)
 
   AI → 결과 보고:
-    "Magnetogram 추가 시 활동영역에서 12% 개선.
+    "Magnetogram 추가 시 합성 94 A CC: 0.87→0.91 개선.
+     활동영역 DEM logT 6.0~6.5 EM 오차 15% 감소.
      조용한 영역은 유의미한 차이 없음."
-    + 비교표, 그래프 제공
+    + 채널별 비교표, 영역별 DEM 프로파일 그래프
 
 교수님: "이걸로 짧은 논문 초안 써줘"
 

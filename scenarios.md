@@ -129,21 +129,25 @@
 
 1. **연구자가 아이디어를 제시**
    - (교수님) "Solar Orbiter로 DEM 만드는 연구에서 Magnetogram을 추가로 input으로 넣는다면 성능이 좋아질까?"
+   - 배경: EUI/FSI는 2채널(174, 304 A)만 보유 → Pix2PixCC(DL)로 5개 합성 AIA 채널 생성 → 6채널로 DEM 계산하는 기존 연구(Youn et al. 2025, A&A)가 있음
+   - 아이디어: DL 모델(Pix2PixCC)의 input에 PHI magnetogram을 추가하면 합성 채널 품질이 개선되어 DEM 정확도가 높아질까?
 
 2. **LLM이 아이디어를 분석하고 실험 설계를 제안**
-   - (LLM) "이 실험을 수행하려면: (1) EUI 6채널로 기존 DEM 생성, (2) PHI magnetogram을 추가 input으로 넣은 modified DEM 생성, (3) 두 결과를 SDO/AIA DEM과 비교 분석해야 합니다. 진행할까요?"
+   - (LLM) "기존 Pix2PixCC는 AIA 171+304 → 5개 합성 채널을 생성합니다. PHI/FDT magnetogram을 3번째 입력 채널로 추가한 modified Pix2PixCC를 학습시키고, 합성 채널의 품질(CC, RMSE)과 최종 DEM 정확도를 비교하면 됩니다. 진행할까요?"
 
 3. **연구자와 피드백으로 실험 계획을 구체화**
-   - (교수님) "비교 시 온도 범위별로 나눠서 보여줘"
+   - (교수님) "비교할 때 활동영역과 조용한 영역 따로 봐줘"
    - (LLM) 실험 계획을 수정하여 재제시
 
 4. **실험 수행**
-   - 필요 데이터 수집 (EUI, PHI, AIA)
-   - 모델 실행 (기존 DEM, modified DEM)
-   - 비교 분석 (통계, 시각화)
+   - 필요 데이터 수집: AIA 171+304 (학습용 입력), AIA 94/131/193/211/335 (학습용 타겟), HMI magnetogram (추가 입력 — PHI의 SDO 대응)
+   - Baseline: 기존 Pix2PixCC (2채널 입력) 학습 및 합성 채널 생성 → DEM
+   - Experiment: Modified Pix2PixCC (2채널 + magnetogram 입력) 학습 및 합성 채널 생성 → DEM
+   - Reference: 실제 AIA 6채널 DEM (ground truth)
+   - 비교 분석: 채널별 CC/RMSE 비교, DEM 프로파일 비교 (영역별, 온도별)
 
 5. **결과 보고 + 논문 초안**
-   - 실험 결과 보고서 (수치, 그래프, 비교표)
+   - 실험 결과 보고서: 채널 생성 품질 비교표, DEM 비교 그래프, 영역별 분석
    - (요청 시) 논문 초안 작성: Introduction, Method, Results, Discussion 구조
 
 ### 구체적 시나리오 예시
@@ -154,41 +158,54 @@
 
   [research-assistant]
   → 아이디어 분석:
-    - 기존: EUI multi-channel → DEM inversion
-    - 제안: EUI multi-channel + PHI magnetogram → DEM inversion
-    - 검증 방법: SDO/AIA DEM을 ground truth로 사용
+    - 배경: Youn et al. (2025, A&A) — EUI/FSI 174+304 (2채널)로는 DEM 직접 계산 불가
+      → Pix2PixCC(DL)로 AIA 94/131/193/211/335 합성 → 6채널 DEM 계산
+    - 기존 (Baseline): AIA 171+304 → Pix2PixCC → 5개 합성 채널 → DEM
+    - 제안 (Experiment): AIA 171+304 + HMI magnetogram → Modified Pix2PixCC
+      → 5개 합성 채널 → DEM
+      (※ 학습은 SDO 데이터로 수행. PHI는 Solar Orbiter 적용 시 사용)
+    - 가설: 자기장 정보가 활동영역/조용한 영역의 온도 구조 차이를
+      DL 모델이 학습하는 데 도움이 되어, 합성 채널 품질이 개선될 것
 
   → 실험 계획 제안:
-    1. 데이터 수집: EUI 174/304, PHI/FDT, AIA 6채널 (동일 시각)
-    2. Baseline: EUI만으로 DEM 생성
-    3. Experiment: EUI + PHI로 DEM 생성
-    4. Reference: AIA 6채널로 DEM 생성 (ground truth)
-    5. 비교: 온도 범위별 (logT 5.5~7.0) EM 차이, χ² 통계
+    1. 데이터 수집: AIA 171+304 (입력), AIA 94/131/193/211/335 (타겟),
+       HMI magnetogram (추가 입력) — 2011~2021, 일 1장
+    2. Baseline: Pix2PixCC (2채널 입력) 학습 → 합성 5채널 → DEM
+    3. Experiment: Modified Pix2PixCC (3채널 입력: 171+304+mag) 학습
+       → 합성 5채널 → DEM
+    4. Reference: 실제 AIA 6채널 DEM (Hannah & Kontar 2012 방법)
+    5. 비교: 합성 채널별 CC/RMSE, DEM 프로파일 (logT 5.5~7.0),
+       온도 범위별 EM 차이, 영역별 분석
 
   → "이 계획으로 진행할까요?"
 
 교수님: "좋아, 근데 비교할 때 활동영역과 조용한 영역 따로 봐줘"
 
-  [research-assistant] → 계획 수정: 영역 분류 단계 추가
+  [research-assistant] → 계획 수정:
+    - HMI magnetogram 강도 기준으로 활동영역(|B| > 50 G) / 조용한 영역 분류
+    - 각 영역에서 별도로 합성 품질 및 DEM 비교
 
   [승인 후 실행]
-  → data-fetcher: EUI, PHI, AIA 데이터 수집
-  → model-runner: DEM 3회 실행 (baseline, experiment, reference)
-  → 비교 분석: 영역별, 온도별 통계
+  → data-fetcher: AIA 7채널 + HMI magnetogram 수집 (JSOC, 2011~2021)
+  → model-runner: Pix2PixCC 학습 2회 (baseline 2ch, experiment 3ch)
+  → model-runner: 합성 채널 생성 → DEM 3회 계산 (baseline, experiment, reference)
+  → 비교 분석: 채널별 CC/RMSE, 영역별 DEM 프로파일, 온도별 EM 통계
 
   [결과 보고]
-  → "Magnetogram 추가 시 활동영역에서 logT 6.0~6.5 범위 EM이
-     12% 개선되었습니다. 조용한 영역은 유의미한 차이 없음."
-  → 비교표, 온도별 EM 그래프, 영역별 분석 제공
+  → "Magnetogram 추가 시:
+     - 합성 94 A 채널 CC가 0.87 → 0.91로 개선 (활동영역 기여)
+     - 활동영역 DEM: logT 6.0~6.5에서 EM 오차 15% 감소
+     - 조용한 영역: 유의미한 차이 없음 (자기장 정보가 거의 기여하지 않음)"
+  → 채널별 비교표, 영역별 DEM 프로파일 그래프, 온도 범위별 통계 제공
 
 교수님: "오, 이걸로 짧은 논문 초안 써줘"
 
   [paper-drafter]
-  → Introduction: 배경 + 동기
-  → Method: 데이터 + 실험 설계
-  → Results: 핵심 수치 + 그래프 설명
-  → Discussion: 의미 해석 + 한계
-  → References: 관련 선행 연구
+  → Introduction: EUI DEM 한계 + DL 접근 배경 + magnetogram 추가 동기
+  → Method: Pix2PixCC 아키텍처 수정, 학습 데이터, DEM 방법론
+  → Results: 채널 생성 품질 비교 + DEM 비교 (영역별, 온도별)
+  → Discussion: 자기장 정보의 기여 해석, 한계 (flare 시 성능 등)
+  → References: Youn et al. 2025, Hannah & Kontar 2012, Salvatelli et al. 2022 등
 ```
 
 ---
