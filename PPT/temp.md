@@ -218,13 +218,233 @@
 
 ---
 
-# 코드 → 하네스 자동 생성 절차
+# 현재 하네스의 구조적 한계: 툴체인 실행 레이어 부재
+
+## 문제 인식
+
+현재 SSWL-harness-ops v2.0의 구조:
+
+```
+.claude/agents/*.md    ← "역할 설명서" (이 에이전트는 이런 일을 한다)
+.claude/skills/*.md    ← "워크플로우 설명" (이 순서로 진행한다)
+```
+
+**없는 것**: 실제 코드를 실행하는 **Tool(도구)** 과 **Flow(툴체인)** 레이어.
+
+| 있는 것 | 없는 것 |
+|---|---|
+| "data-fetcher는 JSOC에서 데이터를 수집한다" (설명) | JSOC에서 AIA 193 다운로드하는 **실행 가능한 도구** |
+| "model-runner는 모델을 실행한다" (설명) | `python3 run_dem.py --input X --output Y` 를 **자동으로 체이닝**하는 로직 |
+| "task-executor가 순차 실행한다" (설명) | Step1 출력 → Step2 입력으로 **자동 연결**하는 파이프라인 |
+
+**결과**: AI가 매번 즉흥적으로 코드를 작성하거나 찾아서 실행. 연구실의 기존 코드를 정확히 호출하지 못함.
+
+## 어시웍스(AssiWorks) 참고: Tool → Flow → Agent → Team
+
+[어시웍스](https://aifactory.space/guide/8/14)의 4계층 구조:
+
+```
+Layer 1: Tool (도구)         ← 실행 가능한 최소 단위 (API 호출, Python 스크립트, LLM 프롬프트)
+Layer 2: Flow (툴체인)       ← Tool들을 순차/조건/병렬로 연결한 워크플로우
+Layer 3: Agent (에이전트)    ← 자연어를 이해하고 적절한 Tool/Flow를 선택·실행
+Layer 4: Team (팀)           ← 여러 Agent가 협업
+```
+
+**핵심 차이점**: 어시웍스는 **실행 가능한 Tool을 먼저 정의**하고, 그 위에 AI를 얹는다.
+우리는 **AI 설명서만 있고**, 실행 가능한 Tool이 없다.
+
+## 해결 방향: 3계층 하네스 아키텍처
+
+현재 2계층(에이전트 + 스킬)에서 **3계층**으로 확장:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Layer 3: Skills (오케스트레이터)                      │
+│  "사용자 요청 → 어떤 Flow를 실행할지 판단"             │
+│  .claude/skills/*/skill.md                           │
+├─────────────────────────────────────────────────────┤
+│  Layer 2: Agents (지능형 판단)                        │
+│  "Flow 실행 중 예외 처리, 대안 탐색, 사용자 소통"       │
+│  .claude/agents/*.md                                 │
+├─────────────────────────────────────────────────────┤
+│  Layer 1: Tools & Flows (실행 가능한 도구/툴체인)  ← 신규 │
+│  "실제 코드를 래핑한 실행 단위 + 체이닝 정의"           │
+│  .claude/skills/*/scripts/   (실행 가능한 도구)        │
+│  .claude/skills/*/flows/     (툴체인 정의)            │
+│  _workspace/model_registry/  (등록된 모델)            │
+└─────────────────────────────────────────────────────┘
+```
+
+### Layer 1: Tool 정의 형식
+
+각 Tool은 **실행 가능한 래퍼 스크립트** + **메타데이터**:
+
+```yaml
+# tools/fetch_aia.yaml
+name: fetch_aia
+description: "JSOC에서 AIA EUV 이미지를 다운로드한다"
+type: python_script
+script: scripts/fetch_aia.py
+inputs:
+  - name: wavelength
+    type: int
+    required: true
+    description: "파장 (94, 131, 171, 193, 211, 304, 335)"
+  - name: time_start
+    type: string
+    required: true
+    description: "시작 시각 (ISO 형식)"
+  - name: time_end
+    type: string
+    required: true
+  - name: cadence
+    type: string
+    default: "15min"
+  - name: output_dir
+    type: path
+    required: true
+outputs:
+  - name: fits_files
+    type: directory
+    description: "다운로드된 FITS 파일 디렉토리"
+  - name: manifest
+    type: json
+    description: "다운로드 결과 매니페스트"
+dependencies:
+  - drms>=0.6.0
+  - astropy>=5.0
+timeout: 30min
+```
+
+```python
+# scripts/fetch_aia.py
+"""AIA EUV 이미지 다운로드 도구."""
+import argparse
+import drms
+import json
+from pathlib import Path
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--wavelength", type=int, required=True)
+    parser.add_argument("--time_start", required=True)
+    parser.add_argument("--time_end", required=True)
+    parser.add_argument("--cadence", default="15min")
+    parser.add_argument("--output_dir", required=True)
+    args = parser.parse_args()
+
+    client = drms.Client()
+    query = f"aia.lev1_euv_12s[{args.time_start}/{args.time_end}@{args.cadence}][{args.wavelength}]{{image}}"
+    # ... 실제 다운로드 로직 ...
+
+    # 결과 매니페스트 출력 (다음 Tool의 입력)
+    manifest = {"files": downloaded, "count": len(downloaded), "status": "success"}
+    with open(Path(args.output_dir) / "manifest.json", "w") as f:
+        json.dump(manifest, f)
+
+if __name__ == "__main__":
+    main()
+```
+
+### Layer 1: Flow (툴체인) 정의 형식
+
+Tool들을 체이닝하는 **Flow 정의**:
+
+```yaml
+# flows/dem_pipeline.yaml
+name: dem_pipeline
+description: "EUI/FSI 데이터로 DEM을 계산하는 전체 파이프라인"
+trigger_keywords:
+  - "DEM 만들어"
+  - "DEM 계산"
+  - "differential emission measure"
+
+steps:
+  - name: fetch_data
+    tool: fetch_aia
+    params:
+      wavelength: [171, 304]
+      time_start: "{{user.time_start}}"
+      time_end: "{{user.time_end}}"
+      output_dir: "{{workspace}}/step1_data/"
+
+  - name: preprocess
+    tool: preprocess_aia
+    depends_on: [fetch_data]
+    params:
+      input_dir: "{{steps.fetch_data.outputs.fits_files}}"
+      output_dir: "{{workspace}}/step2_preprocessed/"
+      target_resolution: 1024
+
+  - name: generate_channels
+    tool: pix2pixcc_inference
+    depends_on: [preprocess]
+    params:
+      input_dir: "{{steps.preprocess.outputs.processed_dir}}"
+      checkpoint_dir: "{{model_registry}}/pix2pixcc/checkpoints/"
+      output_dir: "{{workspace}}/step3_generated/"
+      channels: [94, 131, 193, 211, 335]
+
+  - name: compute_dem
+    tool: dem_inversion
+    depends_on: [generate_channels]
+    params:
+      input_dir: "{{steps.generate_channels.outputs.channel_dir}}"
+      output_dir: "{{workspace}}/step4_dem/"
+      method: "hannah_kontar_2012"
+      temp_range: [5.5, 7.5]
+
+  - name: visualize
+    tool: dem_visualizer
+    depends_on: [compute_dem]
+    params:
+      dem_file: "{{steps.compute_dem.outputs.dem_fits}}"
+      output_dir: "{{workspace}}/output/"
+
+error_handling:
+  fetch_data_failed: "대체 소스(VSO)로 재시도"
+  generate_channels_failed: "체크포인트 확인 후 사용자에게 보고"
+
+estimated_time: "40~60분"
+```
+
+### Tool과 Flow가 있으면 뭐가 달라지는가
+
+| 현재 (설명서만) | Tool+Flow 도입 후 |
+|---|---|
+| AI가 "drms를 써서 다운로드해야지" → 즉석 코드 작성 | `fetch_aia` Tool 호출 → **검증된 코드** 즉시 실행 |
+| Step간 데이터 전달을 AI가 매번 추론 | `{{steps.fetch_data.outputs.fits_files}}` → **자동 연결** |
+| 같은 작업을 매번 다르게 실행 | Flow 정의로 **재현성 보장** |
+| 에러 시 AI가 상황 판단부터 다시 | `error_handling` 미리 정의 → **일관된 복구** |
+| 연구실 코드를 모르면 범용 코드로 시도 | Tool이 연구실 코드를 **직접 래핑** |
+
+## Code Profile → Tool + Flow 변환
+
+Phase 1(코드 분석)에서 생성한 **Code Profile**을 Tool과 Flow로 변환하는 추가 단계:
+
+```
+Code Profile
+    │
+    ├── 각 실행 step → Tool YAML + 래퍼 스크립트
+    │   (prepare_data.py → tools/preprocess_aia.yaml + scripts/preprocess_aia.py)
+    │
+    ├── 전체 파이프라인 → Flow YAML
+    │   (prepare→train→generate→dem → flows/dem_pipeline.yaml)
+    │
+    └── 모델/가중치 → model_registry 등록
+        (checkpoints/*.pt → model_registry/pix2pixcc/)
+```
+
+---
+
+# 코드 → 하네스 자동 생성 절차 (개정)
 
 위 100가지 아이디어는 **도메인 지식 기반 샘플**이다.
 실제로 연구실에 납품할 하네스는 연구실의 **기존 코드를 읽고** 자동 생성해야 의미가 있다.
 코드를 모르는 상태에서 만든 하네스는 껍데기일 수 밖에 없기 때문이다.
 
 아래는 "코드 헤리티지 → 하네스 자동 생성"까지의 전체 절차를 정리한 것이다.
+**Tool/Flow(툴체인) 레이어 생성**이 추가되었다.
 
 ---
 
@@ -244,12 +464,15 @@
 ## 전체 절차 개요
 
 ```
-Phase 0        Phase 1           Phase 2          Phase 3          Phase 4
-코드 수집  ──▶  코드 분석   ──▶  하네스 설계  ──▶  자동 생성  ──▶  검증/배포
+Phase 0        Phase 1           Phase 2          Phase 2.5          Phase 3          Phase 4
+코드 수집  ──▶  코드 분석   ──▶  하네스 설계  ──▶  Tool/Flow 생성 ──▶ 에이전트 생성 ──▶ 검증/배포
 
-(어디에       (뭘 하는       (어떤 하네스로   (에이전트/     (테스트 +
- 뭐가 있나)    코드인가)       묶을 것인가)     스킬 .md 생성)  피드백 루프)
+(어디에       (뭘 하는       (어떤 하네스로   (실행 가능한     (에이전트/     (테스트 +
+ 뭐가 있나)    코드인가)       묶을 것인가)     도구+툴체인)     스킬 .md 생성)  피드백 루프)
 ```
+
+> **Phase 2.5가 핵심 추가사항**: Code Profile의 각 실행 step을 **Tool YAML + 래퍼 스크립트**로,
+> 전체 파이프라인을 **Flow YAML**로 변환한다. 이것이 있어야 에이전트가 "설명"이 아닌 "실행"을 한다.
 
 ---
 
@@ -649,23 +872,80 @@ harness-factory/
 
 ---
 
-## 요약: 납품까지의 로드맵
+## 요약: 납품까���의 로드맵
 
 ```
-Step 1. 코드 수집        연구자 인터뷰 + 서버 스캔 → inventory.json
+Step 1. ���드 수집        연구자 인터뷰 + 서버 스캔 → inventory.json
         (1~2일)
 
-Step 2. 코드 분석        code-profiler로 각 코드 → Code Profile 생성
-        (코드당 10~30분)  연구실 전체 예상: 2~3일
+Step 2. 코드 분석        code-profiler로 각 ���드 → Code Profile 생성
+        (코드��� 10~30분)  연구실 전체 예상: 2~3일
 
 Step 3. 하네스 설계      Code Profile → Blueprint 그루핑
         (1일)            연구자 리뷰 + 피드백
 
-Step 4. 자동 생성        Blueprint → 에이전트/스킬 .md + model_card
-        (코드당 5~10분)   연구실 전체 예상: 1일
+Step 4. Tool/Flow 생성   각 코드 step → Tool YAML + 래퍼 스크립트   ← 신규
+        (코드당 15~30분)  파이프라인 → Flow YAML
+                         연구실 전체 예상: 2~3일
 
-Step 5. 검증/배포        드라이런 + 사용자 검증 + 피드백 반영
-        (2~3일)
+Step 5. 에이전트 생성    Blueprint → 에이전트/스킬 .md + model_card
+        (코드당 5~10분)   연구실 전체 ��상: 1일
 
-총 예상: 1~2주 (코드 규모에 따라 변동)
+Step 6. 검증/���포        Tool 단위 테스트 + Flow 드라이런 +
+        (2~3��)          사용자 검증 + 피드백 반영
+
+총 예상: 2~3주 (코드 규모에 따라 변동)
+```
+
+### Tool/Flow 레이어가 추가된 최종 디렉토리 구조
+
+```
+SSWL-harness-ops/
+├── CLAUDE.md
+├── scenarios.md
+├── pamphlet.md
+├── publications.md
+├── .claude/
+│   ���── agents/                    # Layer 2: 지능형 판단
+│   │   ├── query-planner.md
+│   │   ├── data-fetcher.md
+│   │   ├── model-runner.md
+│   │   ├── task-executor.md
+│   │   ├── result-reporter.md
+│   │   ├── skill-archivist.md
+│   │   └── research-assistant.md
+│   └── skills/                    # Layer 3: 오케스트레이터
+│       ├── research-task/
+│       │   ├��─ skill.md           # 워크플로우 설명
+│       │   ├── tools/             # ← 신규: Layer 1 실행 도구
+│       │   │   ├── fetch_aia.yaml
+│       ��   │   ├── fetch_hmi.yaml
+│       │   │   ├── preprocess.yaml
+│       │   │   └── ...
+│       │   ├── flows/             # ← ���규: Layer 1 툴체인 정의
+│       │   │   ├── synoptic_map_pipeline.yaml
+│       │   │   ├── pfss_pipeline.yaml
+│       │   │   └── ...
+│       │   └── scripts/           # ← 신규: 실행 가능한 래퍼 스크립트
+│       │       ├── fetch_aia.py
+│       │       ├── fetch_hmi.py
+│       │       ├── preprocess.py
+│       │       └── ...
+│       ├── model-archive/
+│       │   ├── skill.md
+│       │   ├── tools/
+│       │   └── scripts/
+│       ├── idea-to-experiment/
+│       │   ├── skill.md
+���       │   ├── flows/
+│       │   └── scripts/
+│       └── ...
+└── _workspace/
+    └── model_registry/            # 등록된 모델 (Tool로 래핑됨)
+        ├── pix2pixcc/
+        ��   ├── model_card.md
+        │   ├── tool.yaml          # ← 신규: Tool 정의
+        │   ├── run.sh
+        │   └── checkpoints/
+        └── ...
 ```
