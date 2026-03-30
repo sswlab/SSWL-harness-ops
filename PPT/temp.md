@@ -4,6 +4,11 @@
 > SSWL(태양 및 우주환경연구실) 도메인에 맞게 변환·확장.
 > 연구실 논문 51편(2019~2026)의 연구 분야를 기반으로 구성.
 
+> **주의: 아래 100가지는 샘플(초안)입니다.**
+> 실제 납품을 위해서는 연구실의 **기존 코드 헤리티지**를 분석하여
+> 코드 기반의 하네스를 자동 생성해야 합니다.
+> 해당 절차는 본 문서 하단의 [코드 → 하네스 자동 생성 절차](#코드--하네스-자동-생성-절차)를 참조하세요.
+
 ---
 
 ## 카테고리 1: 태양 데이터 처리 & 분석 (01~15)
@@ -210,3 +215,457 @@
 > **다음 단계**: 위 100개 중 우선순위를 정하여 순차적으로 구축.
 > 현재 v2.0의 범용 파이프라인(research-task)으로 상당수를 커버하지만,
 > 특화 하네스는 더 정확하고 효율적인 결과를 제공할 수 있음.
+
+---
+
+# 코드 → 하네스 자동 생성 절차
+
+위 100가지 아이디어는 **도메인 지식 기반 샘플**이다.
+실제로 연구실에 납품할 하네스는 연구실의 **기존 코드를 읽고** 자동 생성해야 의미가 있다.
+코드를 모르는 상태에서 만든 하네스는 껍데기일 수 밖에 없기 때문이다.
+
+아래는 "코드 헤리티지 → 하네스 자동 생성"까지의 전체 절차를 정리한 것이다.
+
+---
+
+## 왜 코드를 먼저 읽어야 하는가
+
+| 샘플 하네스 (현재) | 코드 기반 하네스 (목표) |
+|---|---|
+| "synoptic map 만드는 하네스" (일반적 설명) | `lab_code/synoptic/make_synmap.py`의 실제 인자, 의존성, 출력 형식을 반영한 하네스 |
+| 에이전트가 "sunpy를 쓸 것이다" (추측) | 실제 코드가 `drms` + 커스텀 보간을 쓰는 것을 반영 |
+| 입력이 "HMI 자기장" (모호) | `hmi.synoptic_mr_polfil_720s[CR]/Br` 시리즈, FITS 헤더 `CRLN_OBS` 필요 |
+
+**코드를 읽지 않으면**: 사용자가 "synoptic map 만들어줘"라고 했을 때 AI가 일반적인 방법을 시도한다.
+**코드를 읽으면**: 연구실의 `make_synmap.py`를 정확히 호출하고, 해당 코드의 인자/형식에 맞춘다.
+
+---
+
+## 전체 절차 개요
+
+```
+Phase 0        Phase 1           Phase 2          Phase 3          Phase 4
+코드 수집  ──▶  코드 분석   ──▶  하네스 설계  ──▶  자동 생성  ──▶  검증/배포
+
+(어디에       (뭘 하는       (어떤 하네스로   (에이전트/     (테스트 +
+ 뭐가 있나)    코드인가)       묶을 것인가)     스킬 .md 생성)  피드백 루프)
+```
+
+---
+
+## Phase 0: 코드 수집 — "연구실에 뭐가 있는가"
+
+### 목표
+연구실의 모든 코드 자산을 한 곳에서 파악할 수 있게 한다.
+
+### 절차
+
+1. **코드 저장소 목록화**
+   - GitHub/GitLab 조직 내 모든 repo 목록
+   - 개인 PC/서버에 있는 비버전관리 코드 (이것이 핵심 — 대부분 여기에 있음)
+   - 공유 서버 (`/home/lab/`, `/data/models/` 등)의 스크립트
+
+2. **코드 인벤토리 작성**
+   ```
+   _workspace/code_inventory/
+   ├── inventory.json          # 전체 코드 목록
+   ├── repo_map.md             # 저장소별 개요
+   └── orphan_scripts.md       # 버전관리 안 된 코드 목록
+   ```
+
+3. **접근 권한 확보**
+   - 각 연구자의 코드 경로에 읽기 권한
+   - 필요 시 연구자에게 코드 위치/용도 인터뷰
+
+### 산출물
+```json
+{
+  "repositories": [
+    {
+      "path": "/home/researcher_a/dem_inversion/",
+      "owner": "윤준무",
+      "description": "EUI→합성 채널→DEM 파이프라인",
+      "last_modified": "2025-12-15",
+      "vcs": "git",
+      "related_papers": ["Youn et al. 2025 A&A"]
+    },
+    {
+      "path": "/home/researcher_b/flare_forecast/",
+      "owner": "이강우",
+      "description": "플레어 예보 강화학습 모델",
+      "last_modified": "2023-08-20",
+      "vcs": "none",
+      "related_papers": ["Yi et al. 2023 ApJS"]
+    }
+  ]
+}
+```
+
+> **현실적 문제**: 연구실 코드의 80%는 개인 PC에 있고, README도 없고,
+> 개발자만 실행 방법을 안다. 이것이 바로 이 절차가 필요한 이유이다.
+
+---
+
+## Phase 1: 코드 분석 — "이 코드가 뭘 하는가"
+
+### 목표
+각 코드의 입력, 출력, 의존성, 실행 방법, 도메인 역할을 파악한다.
+
+### 자동 분석 항목
+
+AI(Claude Code)가 각 코드를 읽고 다음을 추출한다:
+
+| 분석 항목 | 방법 | 예시 |
+|---|---|---|
+| **진입점(entry point)** | `if __name__`, `argparse`, `click` 탐색 | `main.py --input_dir X --output_dir Y` |
+| **입력 데이터** | `open()`, `fits.open()`, `pd.read_csv()`, `argparse` 인자 | AIA 193 A FITS 파일, 디렉토리 경로 |
+| **출력 데이터** | `savefig()`, `fits.writeto()`, `to_csv()`, `print()` | DEM map FITS + PNG |
+| **의존성** | `import` 문, `requirements.txt`, `setup.py` | sunpy, astropy, torch, demregpy |
+| **데이터 소스** | `drms.Client()`, `Fido.search()`, `requests.get()` URL 패턴 | JSOC `aia.lev1_euv_12s`, SOAR TAP |
+| **모델/가중치** | `torch.load()`, `model.load_state_dict()`, `.h5`, `.pt` 파일 | `checkpoints/pix2pixcc_94A.pt` |
+| **실행 환경** | GPU 사용(`torch.cuda`), 메모리 패턴, 멀티프로세싱 | GPU 필수, ~8GB VRAM |
+| **도메인 분류** | import 패턴 + 변수명 + 주석으로 추론 | DEM, 플레어 예보, 자기장 외삽 등 |
+
+### 분석 결과 형식: Code Profile
+
+각 코드에 대해 **Code Profile**을 생성한다:
+
+```markdown
+# Code Profile: dem_inversion
+
+## 기본 정보
+- **경로**: /home/youn_j/dem_inversion/
+- **소유자**: 윤준무
+- **관련 논문**: Youn et al. 2025, A&A, 695, A125
+- **마지막 수정**: 2025-12-15
+- **코드 규모**: 12개 파일, 2,400줄
+
+## 파이프라인 구조
+```
+prepare_data.py  →  train_pix2pixcc.py  →  generate_channels.py  →  compute_dem.py
+(데이터 전처리)     (모델 학습)             (채널 합성)               (DEM 계산)
+```
+
+## 입력
+| 입력 | 형식 | 소스 | 필수 |
+|---|---|---|---|
+| AIA 171 A 이미지 | FITS (4096x4096) | JSOC `aia.lev1_euv_12s` | 예 |
+| AIA 304 A 이미지 | FITS (4096x4096) | JSOC `aia.lev1_euv_12s` | 예 |
+| AIA 94/131/193/211/335 A | FITS | JSOC | 학습 시에만 |
+
+## 출력
+| 출력 | 형식 | 설명 |
+|---|---|---|
+| 합성 채널 (5개) | FITS (1024x1024) | AI 생성 AIA 등가 채널 |
+| DEM map | FITS | 온도별 EM 분포 |
+| DEM 시각화 | PNG | 온도 맵 |
+
+## 의존성
+```
+torch>=1.9.0
+sunpy>=5.0.0
+astropy>=5.0
+demregpy>=1.0
+aiapy>=0.7.0
+```
+
+## 실행 방법
+```bash
+# 1. 데이터 준비
+python prepare_data.py --start_date 2021-01-01 --end_date 2021-12-31
+
+# 2. 학습 (GPU 필요)
+python train_pix2pixcc.py --target_channel 94 --epochs 200 --gpu 0
+
+# 3. 채널 생성
+python generate_channels.py --input_dir data/test/ --checkpoint checkpoints/best.pt
+
+# 4. DEM 계산
+python compute_dem.py --input_dir generated/ --output_dir dem_results/
+```
+
+## 주의사항
+- 학습 데이터는 2011~2021 (1일 1장, 00:00 UT)
+- 이미지는 1024x1024로 리사이즈
+- 94 A 채널은 CC가 가장 낮음 (0.87)
+- FSI 174→AIA 171 intercalibration에 0.7 factor 필요
+```
+
+### 분석 도구: `code-profiler` 에이전트
+
+이 분석을 자동화하는 전용 에이전트를 만든다:
+
+```markdown
+---
+name: code-profiler
+description: >
+  연구 코드를 분석하여 Code Profile을 자동 생성하는 에이전트.
+  진입점, 입출력, 의존성, 실행 방법, 도메인 분류를 추출한다.
+---
+```
+
+**분석 전략**:
+1. 디렉토리 구조 스캔 (`*.py`, `*.ipynb`, `requirements.txt`, `README*`)
+2. 각 Python 파일의 import, 함수 시그니처, argparse 인자 추출
+3. 데이터 I/O 패턴 탐지 (FITS, CSV, JSON, HDF5)
+4. DL 모델 패턴 탐지 (PyTorch/TF load/save)
+5. 실행 순서 추론 (파일 간 의존성, 넘버링, README 참조)
+6. 도메인 분류 (변수명 `aia`, `hmi`, `dem`, `flare` 등 + 논문 매칭)
+
+---
+
+## Phase 2: 하네스 설계 — "어떤 하네스로 묶을 것인가"
+
+### 목표
+분석된 Code Profile들을 하네스 단위로 그루핑하고, 에이전트/스킬 구조를 설계한다.
+
+### 그루핑 기준
+
+| 기준 | 설명 | 예시 |
+|---|---|---|
+| **파이프라인 단위** | 하나의 end-to-end 워크플로우 | `prepare→train→generate→dem` = 1 하네스 |
+| **공유 입력** | 같은 데이터를 쓰는 코드끼리 | AIA 193 쓰는 코드들 → 코로나홀/DEM/플레어 |
+| **공유 출력** | 한 코드의 출력이 다른 코드의 입력 | synoptic map → PFSS → open field mapping |
+| **논문 단위** | 같은 논문에 속하는 코드 | Youn et al. 2025의 전체 코드 = 1 하네스 |
+| **도메인 클러스터** | 같은 연구 분야 | 플레어 예보 관련 코드 3개 → 1 하네스 |
+
+### 설계 결정 사항
+
+각 하네스에 대해 결정할 것:
+
+```
+1. 실행 모드 선택
+   ├── Sub-agent (단순 순차 실행) — 코드 1~2개, 파이프라인 단순
+   └── Agent Team (협업 실행) — 코드 3개 이상, 병렬/분기 존재
+
+2. 에이전트 분리 기준
+   ├── 코드 파일 1개 = 에이전트 1개? (너무 세분화)
+   └── 파이프라인 단계 = 에이전트 1개 (권장)
+       예: data-fetch / preprocess / model-run / postprocess
+
+3. 기존 범용 에이전트 재사용 vs 전용 에이전트 생성
+   ├── data-fetcher, model-runner → 재사용 (코드 래퍼만 추가)
+   └── 도메인 특화 로직 → 전용 에이전트 (dem-calculator 등)
+
+4. 스킬 구성
+   ├── 오케스트레이터 스킬 (워크플로우 정의)
+   └── 참조 스킬 (코드 사용법, 데이터 형식 등)
+```
+
+### 설계 산출물: Harness Blueprint
+
+```markdown
+# Harness Blueprint: eui-dem-pipeline
+
+## 출처 코드
+- /home/youn_j/dem_inversion/ (Code Profile 참조)
+
+## 사용자 시나리오
+"Solar Orbiter EUI 데이터로 DEM 만들어줘"
+
+## 에이전트 구성
+| 에이전트 | 역할 | 출처 코드 | 기존 재사용 |
+|---|---|---|---|
+| data-fetcher | AIA/EUI 데이터 수집 | - | 재사용 |
+| eui-preprocessor | EUI→AIA 보정, 리사이즈 | prepare_data.py | 신규 |
+| pix2pixcc-runner | 합성 채널 생성 | generate_channels.py | 신규 (model-runner 확장) |
+| dem-calculator | DEM 역산 | compute_dem.py | 신규 |
+| result-reporter | 결과 보고 | - | 재사용 |
+
+## 워크플로우
+data-fetcher → eui-preprocessor → pix2pixcc-runner → dem-calculator → result-reporter
+
+## 모델 레지스트리 등록
+- pix2pixcc_94A.pt, pix2pixcc_131A.pt, ... (5개 체크포인트)
+- model_card.md 자동 생성
+```
+
+---
+
+## Phase 3: 자동 생성 — "에이전트/스킬 .md를 자동 작성"
+
+### 목표
+Blueprint를 바탕으로 `.claude/agents/*.md`, `.claude/skills/*/skill.md` 파일을 자동 생성한다.
+
+### 생성 대상
+
+| 생성물 | 내용 | 생성 방법 |
+|---|---|---|
+| **에이전트 .md** | 역할, 원칙, 입출력 프로토콜, 실행 명령어 | Code Profile → 템플릿 채우기 |
+| **스킬 .md** | 오케스트레이터 워크플로우, Phase 정의 | Blueprint → 템플릿 채우기 |
+| **model_card.md** | 모델 카드 (입출력, 의존성, 실행법) | Code Profile에서 직접 추출 |
+| **run.sh** | 실행 래퍼 스크립트 | argparse/실행 명령어에서 생성 |
+
+### 에이전트 자동 생성 템플릿
+
+Code Profile의 각 단계를 에이전트 .md로 변환하는 규칙:
+
+```
+Code Profile의 "실행 방법" 각 step
+    ↓
+---
+name: {step_name}
+description: >
+  {Code Profile의 해당 step 설명}.
+  {입력 데이터 요약}을 받아 {출력 데이터 요약}을 생성한다.
+---
+
+# {Step Name}
+
+## 핵심 역할
+{Code Profile 설명에서 추출}
+
+## 실행 명령어
+```bash
+{Code Profile의 실행 방법에서 해당 step}
+```
+
+## 입력
+{Code Profile의 입력 테이블에서 해당 step 관련 항목}
+
+## 출력
+{Code Profile의 출력 테이블에서 해당 step 관련 항목}
+
+## 의존성
+{Code Profile의 의존성에서 해당 step import에 사용되는 것만}
+```
+
+### 생성 도구: `harness-generator` 에이전트
+
+```markdown
+---
+name: harness-generator
+description: >
+  Code Profile과 Harness Blueprint를 읽어
+  에이전트/스킬 .md 파일을 자동 생성하는 에이전트.
+---
+```
+
+---
+
+## Phase 4: 검증 & 배포 — "실제로 돌아가는가"
+
+### 검증 단계
+
+```
+1. 정적 검증 (즉시)
+   ├── 생성된 .md 파일의 YAML frontmatter 유효성
+   ├── 참조하는 코드 경로가 실제 존재하는지
+   ├── 의존성 패키지가 설치되어 있는지
+   └── 실행 명령어 문법 오류 없는지
+
+2. 드라이런 검증 (수 분)
+   ├── 샘플 데이터(소량)로 파이프라인 실행
+   ├── 각 단계의 출력이 다음 단계 입력과 호환되는지
+   └── 에러 없이 end-to-end 통과하는지
+
+3. 사용자 검증 (피드백)
+   ├── 코드 소유자(개발자)에게 생성된 하네스 리뷰 요청
+   ├── "이 하네스가 당신 코드를 정확히 반영하는가?"
+   └── 피드백 → Phase 2로 돌아가 수정
+```
+
+### 배포
+
+검증 통과 시:
+1. `.claude/agents/`에 에이전트 .md 추가
+2. `.claude/skills/`에 스킬 .md 추가
+3. `_workspace/model_registry/`에 모델 카드 + 래퍼 등록
+4. `CLAUDE.md` 업데이트 (새 하네스 목록 반영)
+
+---
+
+## 전체 프로세스를 자동화하는 메타-하네스
+
+위 Phase 0~4 전체를 **하나의 하네스**로 만들 수 있다:
+
+```
+harness-factory/
+├── skill.md                    # 오케스트레이터
+├── agents/
+│   ├── code-profiler.md        # Phase 1: 코드 분석
+│   ├── harness-designer.md     # Phase 2: 하네스 설계
+│   ├── harness-generator.md    # Phase 3: .md 파일 생성
+│   └── harness-validator.md    # Phase 4: 검증
+```
+
+### 사용 시나리오
+
+```
+사용자: "연구실 코드를 하네스로 만들어줘"
+
+  [harness-factory 오케스트레이터]
+
+  Phase 0: "코드가 어디에 있나요?"
+  사용자: "/home/youn_j/dem_inversion/"
+
+  Phase 1: [code-profiler]
+  → 코드 읽기: 12개 파일 분석
+  → Code Profile 생성
+  → "이 코드는 EUI DEM 파이프라인입니다. 4단계로 구성됩니다."
+
+  Phase 2: [harness-designer]
+  → Blueprint 생성
+  → "다음과 같이 하네스를 설계했습니다: ..."
+  → 사용자 승인
+
+  Phase 3: [harness-generator]
+  → 에이전트 3개 + 스킬 1개 + 모델 카드 5개 자동 생성
+  → "생성 완료. .claude/agents/에 3개 파일, .claude/skills/에 1개 추가."
+
+  Phase 4: [harness-validator]
+  → 정적 검증 통과
+  → 드라이런: 샘플 1일 데이터로 파이프라인 테스트
+  → "검증 완료. 모든 단계 정상 통과."
+
+  → 배포 완료!
+```
+
+---
+
+## 현실적 고려사항
+
+### 연구실 코드의 전형적인 상태
+
+| 상태 | 빈도 | 대응 |
+|---|---|---|
+| README 없음 | 매우 높음 | code-profiler가 코드에서 직접 추론 |
+| argparse 없음 (하드코딩) | 높음 | 하드코딩된 경로/파라미터를 식별하여 인자화 제안 |
+| requirements.txt 없음 | 높음 | import 문에서 자동 생성 |
+| Jupyter notebook만 존재 | 중간 | notebook→스크립트 변환 후 분석 |
+| 코드가 깨져있음 (구버전 의존성) | 중간 | 의존성 충돌 식별, 수정 제안 |
+| 개발자가 졸업/퇴사 | 높음 | 코드만으로 분석해야 하므로 Phase 1이 핵심 |
+
+### 우선순위 결정 기준
+
+모든 코드를 한꺼번에 하네스로 만들 수는 없다. 우선순위:
+
+```
+1순위: 현재 활발히 사용 중인 코드 (연구자 요청 빈도 높음)
+2순위: 논문에 공개된 코드 (재현성 요구)
+3순위: 여러 연구자가 공통으로 쓰는 유틸리티
+4순위: 역사적 코드 (졸업생 코드 보존)
+```
+
+---
+
+## 요약: 납품까지의 로드맵
+
+```
+Step 1. 코드 수집        연구자 인터뷰 + 서버 스캔 → inventory.json
+        (1~2일)
+
+Step 2. 코드 분석        code-profiler로 각 코드 → Code Profile 생성
+        (코드당 10~30분)  연구실 전체 예상: 2~3일
+
+Step 3. 하네스 설계      Code Profile → Blueprint 그루핑
+        (1일)            연구자 리뷰 + 피드백
+
+Step 4. 자동 생성        Blueprint → 에이전트/스킬 .md + model_card
+        (코드당 5~10분)   연구실 전체 예상: 1일
+
+Step 5. 검증/배포        드라이런 + 사용자 검증 + 피드백 반영
+        (2~3일)
+
+총 예상: 1~2주 (코드 규모에 따라 변동)
+```
