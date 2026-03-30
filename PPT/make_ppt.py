@@ -715,7 +715,259 @@ style_table(tbl, headers, data, col_widths=[3.5, 3.0, 3.0])
 
 
 # ============================================================
-# 슬라이드 9: 기술 요약 + 마무리
+# 슬라이드 9: 확장 가능성 — 100가지 하네스 아이디어
+# ============================================================
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+add_bg(slide, WHITE)
+
+tb = add_textbox(slide, 0.8, 0.4, 11, 0.7)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "확장 가능성 — 100가지 특화 하네스"
+set_font(run, size=28, bold=True, color=NAVY)
+add_rect(slide, 0.8, 1.05, 3.0, 0.05, INDIGO)
+
+# 카테고리별 표
+headers = ["카테고리", "개수", "예시"]
+data = [
+    ["태양 데이터 처리 & 분석", "15", "AIA 파이프라인, synoptic map, 코로나홀 추적"],
+    ["우주기상 예보 & 모니터링", "13", "Kp/Dst 예보, 태양풍 예측, SEP 예보"],
+    ["딥러닝 모델 개발 & 실험", "15", "Pix2PixCC 학습, 초해상도, XAI 분석"],
+    ["코로나/자기장 물리 연구", "10", "3D 복원, NLFFF, MHD, 코로나 진동"],
+    ["논문 & 연구 지원", "13", "논문 초안, 문헌 검토, 제안서 작성"],
+    ["데이터 관리 & 인프라", "10", "모델 레지스트리, 환경 복제, 재현성"],
+    ["시각화 & 커뮤니케이션", "9", "태양 애니메이션, 3D 코로나, 인포그래픽"],
+    ["교육 & 온보딩", "7", "신규 연구자 가이드, 튜토리얼 생성"],
+    ["위성 미션 & 관측 지원", "5", "관측 계획, conjunction 탐색, L4 미션"],
+    ["연구실 운영 & 관리", "3", "지식 베이스, 회의록, 로드맵"],
+]
+tbl = add_table(slide, 11, 3, 0.8, 1.4, 7.5, 4.8)
+style_table(tbl, headers, data, col_widths=[2.5, 0.8, 4.2])
+
+# 우측: 설명 박스
+add_rect(slide, 8.8, 1.4, 4.0, 2.5, LIGHT_BG, TABLE_BORDER)
+tb = add_textbox(slide, 9.0, 1.5, 3.6, 0.4)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "범용 vs 특화 하네스"
+set_font(run, size=15, bold=True, color=NAVY)
+
+tb = add_textbox(slide, 9.0, 1.9, 3.6, 1.8)
+tf = tb.text_frame
+tf.word_wrap = True
+add_paragraph(tf, "현재 v2.0의 research-task는", size=11, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, "범용 파이프라인으로 대부분을", size=11, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, "처리할 수 있습니다.", size=11, color=DARK_GRAY, space_after=8)
+add_paragraph(tf, "특화 하네스를 만들면:", size=11, bold=True, color=NAVY, space_after=4)
+add_paragraph(tf, "- 정확한 코드 호출", size=11, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, "- 도메인 지식 내장", size=11, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, "- 오류율 감소", size=11, color=DARK_GRAY)
+
+# 우측 하단: 핵심 메시지
+add_rect(slide, 8.8, 4.2, 4.0, 2.0, RGBColor(0xFD, 0xFD, 0xE8), RGBColor(0xE0, 0xE0, 0xE0))
+tb = add_textbox(slide, 9.0, 4.3, 3.6, 1.8)
+tf = tb.text_frame
+tf.word_wrap = True
+add_paragraph(tf, "하지만 이것은 샘플입니다", size=13, bold=True, color=NAVY, space_after=8)
+add_paragraph(tf, "실제로 의미있는 하네스를 만들려면", size=11, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, "연구실의 기존 코드를 읽고", size=11, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, "그 코드에 맞는 하네스를", size=11, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, "자동 생성해야 합니다.", size=11, bold=True, color=NAVY)
+
+
+# ============================================================
+# 슬라이드 10: 코드 → 하네스 자동 생성 절차
+# ============================================================
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+add_bg(slide, WHITE)
+
+tb = add_textbox(slide, 0.8, 0.4, 11, 0.7)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = '코드 헤리티지 → 하네스 자동 생성'
+set_font(run, size=28, bold=True, color=NAVY)
+add_rect(slide, 0.8, 1.05, 3.0, 0.05, INDIGO)
+
+# 5개 Phase 박스 (가로 배열)
+AMBER = RGBColor(0xFF, 0x8F, 0x00)
+LIGHT_AMBER = RGBColor(0xFF, 0xF8, 0xE1)
+
+phases = [
+    ("Phase 0", "코드 수집", "연구실 어디에\n뭐가 있는가\n(inventory)"),
+    ("Phase 1", "코드 분석", "code-profiler가\n코드를 읽고\nCode Profile 생성"),
+    ("Phase 2", "하네스 설계", "Code Profile →\nBlueprint\n(그루핑/구조 설계)"),
+    ("Phase 3", "자동 생성", "Blueprint →\n에이전트/스킬\n.md 파일 생성"),
+    ("Phase 4", "검증/배포", "드라이런 +\n사용자 피드백 +\n배포"),
+]
+
+for i, (phase, title, desc) in enumerate(phases):
+    x = 0.5 + i * 2.55
+    # Phase 박스
+    add_rect(slide, x, 1.4, 2.3, 3.0, WHITE, INDIGO)
+    # Phase 번호 (상단 바)
+    add_rect(slide, x, 1.4, 2.3, 0.5, INDIGO)
+    tb2 = add_textbox(slide, x, 1.4, 2.3, 0.5)
+    p2 = tb2.text_frame.paragraphs[0]
+    p2.alignment = PP_ALIGN.CENTER
+    r2 = p2.add_run()
+    r2.text = phase
+    set_font(r2, size=13, bold=True, color=WHITE)
+    # 제목
+    tb3 = add_textbox(slide, x + 0.1, 2.0, 2.1, 0.4)
+    p3 = tb3.text_frame.paragraphs[0]
+    p3.alignment = PP_ALIGN.CENTER
+    r3 = p3.add_run()
+    r3.text = title
+    set_font(r3, size=14, bold=True, color=NAVY)
+    # 설명
+    tb4 = add_textbox(slide, x + 0.1, 2.5, 2.1, 1.7)
+    tb4.text_frame.word_wrap = True
+    p4 = tb4.text_frame.paragraphs[0]
+    p4.alignment = PP_ALIGN.CENTER
+    r4 = p4.add_run()
+    r4.text = desc
+    set_font(r4, size=11, color=GRAY)
+
+# 화살표 텍스트 (Phase 사이)
+for i in range(4):
+    x = 2.6 + i * 2.55
+    tb5 = add_textbox(slide, x, 2.5, 0.5, 0.4)
+    p5 = tb5.text_frame.paragraphs[0]
+    p5.alignment = PP_ALIGN.CENTER
+    r5 = p5.add_run()
+    r5.text = "→"
+    set_font(r5, size=20, bold=True, color=INDIGO)
+
+# 하단: 왜 코드를 읽어야 하는가
+add_rect(slide, 0.5, 4.7, 6.0, 2.2, LIGHT_AMBER, RGBColor(0xFF, 0xCA, 0x28))
+tb = add_textbox(slide, 0.7, 4.8, 5.6, 0.4)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "왜 코드를 먼저 읽어야 하는가"
+set_font(run, size=14, bold=True, color=AMBER)
+
+tb = add_textbox(slide, 0.7, 5.2, 5.6, 1.5)
+tf = tb.text_frame
+tf.word_wrap = True
+add_paragraph(tf, '샘플: "synoptic map 만드는 하네스" (일반적 설명)', size=11, color=GRAY, space_after=4)
+add_paragraph(tf, '코드 기반: make_synmap.py의 실제 인자,', size=11, bold=True, color=DARK_GRAY, space_after=1)
+add_paragraph(tf, '의존성, 출력 형식을 정확히 반영한 하네스', size=11, bold=True, color=DARK_GRAY, space_after=8)
+add_paragraph(tf, '→ 코드를 읽지 않으면 AI가 일반적 방법을 시도', size=10, color=GRAY, space_after=2)
+add_paragraph(tf, '→ 코드를 읽으면 연구실 코드를 정확히 호출', size=10, color=AMBER)
+
+# 하단 우측: harness-factory 개념
+add_rect(slide, 6.8, 4.7, 6.0, 2.2, LIGHT_BG, TABLE_BORDER)
+tb = add_textbox(slide, 7.0, 4.8, 5.6, 0.4)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "harness-factory: 메타-하네스"
+set_font(run, size=14, bold=True, color=NAVY)
+
+tb = add_textbox(slide, 7.0, 5.2, 5.6, 1.5)
+tf = tb.text_frame
+tf.word_wrap = True
+add_paragraph(tf, '위 5단계를 하나의 하네스로 자동화:', size=11, color=DARK_GRAY, space_after=6)
+add_paragraph(tf, 'code-profiler — 코드 자동 분석', size=11, color=GRAY, space_after=2)
+add_paragraph(tf, 'harness-designer — 하네스 구조 설계', size=11, color=GRAY, space_after=2)
+add_paragraph(tf, 'harness-generator — .md 파일 자동 생성', size=11, color=GRAY, space_after=2)
+add_paragraph(tf, 'harness-validator — 검증 + 배포', size=11, color=GRAY, space_after=6)
+add_paragraph(tf, '"코드 경로만 알려주면 하네스가 자동으로 만들어집니다"', size=11, bold=True, color=NAVY)
+
+
+# ============================================================
+# 슬라이드 11: 납품 로드맵
+# ============================================================
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+add_bg(slide, WHITE)
+
+tb = add_textbox(slide, 0.8, 0.4, 11, 0.7)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "납품 로드맵"
+set_font(run, size=30, bold=True, color=NAVY)
+add_rect(slide, 0.8, 1.05, 1.8, 0.05, INDIGO)
+
+# 타임라인 박스들
+roadmap = [
+    ("Step 1", "코드 수집", "1~2일",
+     "연구자 인터뷰 + 서버 스캔\ninventory.json 생성\n비버전관리 코드 식별"),
+    ("Step 2", "코드 분석", "2~3일",
+     "code-profiler로 Code Profile 생성\n입출력/의존성/실행방법 자동 추출\n코드당 10~30분"),
+    ("Step 3", "하네스 설계", "1일",
+     "Code Profile → Blueprint 그루핑\n에이전트/스킬 구조 설계\n연구자 리뷰 + 피드백"),
+    ("Step 4", "자동 생성", "1일",
+     "Blueprint → .md 파일 자동 생성\nmodel_card.md + run.sh\n코드당 5~10분"),
+    ("Step 5", "검증/배포", "2~3일",
+     "드라이런 (샘플 데이터)\n사용자 검증 + 피드백 반영\n최종 배포"),
+]
+
+for i, (step, title, duration, desc) in enumerate(roadmap):
+    x = 0.5 + i * 2.55
+    y = 1.4
+
+    # 메인 박스
+    add_rect(slide, x, y, 2.3, 3.8, WHITE, INDIGO)
+
+    # Step 번호 바
+    add_rect(slide, x, y, 2.3, 0.5, INDIGO)
+    tb2 = add_textbox(slide, x, y, 2.3, 0.5)
+    p2 = tb2.text_frame.paragraphs[0]
+    p2.alignment = PP_ALIGN.CENTER
+    r2 = p2.add_run()
+    r2.text = step
+    set_font(r2, size=13, bold=True, color=WHITE)
+
+    # 제목
+    tb3 = add_textbox(slide, x + 0.1, y + 0.6, 2.1, 0.35)
+    p3 = tb3.text_frame.paragraphs[0]
+    p3.alignment = PP_ALIGN.CENTER
+    r3 = p3.add_run()
+    r3.text = title
+    set_font(r3, size=14, bold=True, color=NAVY)
+
+    # 기간 뱃지
+    add_rect(slide, x + 0.6, y + 1.0, 1.1, 0.35, LIGHT_BG, TABLE_BORDER)
+    tb4 = add_textbox(slide, x + 0.6, y + 1.0, 1.1, 0.35)
+    p4 = tb4.text_frame.paragraphs[0]
+    p4.alignment = PP_ALIGN.CENTER
+    r4 = p4.add_run()
+    r4.text = duration
+    set_font(r4, size=11, bold=True, color=INDIGO)
+
+    # 설명
+    tb5 = add_textbox(slide, x + 0.15, y + 1.5, 2.0, 2.1)
+    tb5.text_frame.word_wrap = True
+    p5 = tb5.text_frame.paragraphs[0]
+    p5.alignment = PP_ALIGN.LEFT
+    r5 = p5.add_run()
+    r5.text = desc
+    set_font(r5, size=10, color=GRAY)
+
+# 하단: 총 기간
+box = add_rect(slide, 0.5, 5.5, 12.3, 0.8, LIGHT_BG, TABLE_BORDER)
+tb = add_textbox(slide, 0.7, 5.55, 11.9, 0.7)
+tf = tb.text_frame
+tf.word_wrap = True
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "총 예상 기간: 1~2주 (코드 규모에 따라 변동)"
+set_font(run, size=18, bold=True, color=NAVY)
+
+add_paragraph(tf, "현실: 연구실 코드의 80%는 README 없이 개인 PC에 존재 → Phase 1(코드 분석)이 핵심", size=12, color=GRAY, align=PP_ALIGN.CENTER)
+
+# 하단: 우선순위
+tb = add_textbox(slide, 0.5, 6.5, 12.3, 0.6)
+tf = tb.text_frame
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "우선순위:  1순위 활발히 사용 중  →  2순위 논문 공개 코드  →  3순위 공통 유틸리티  →  4순위 졸업생 코드 보존"
+set_font(run, size=12, color=DARK_GRAY)
+
+
+# ============================================================
+# 슬라이드 12: 기술 요약 + 마무리
 # ============================================================
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 add_bg(slide, NAVY)
@@ -783,7 +1035,7 @@ set_font(run, size=11, color=RGBColor(0x79, 0x86, 0xCB), italic=True)
 # ============================================================
 # 저장
 # ============================================================
-output_path = "/home/youn_j/SSWL-harness-ops/pamphlet.pptx"
+output_path = "/home/youn_j/SSWL-harness-ops/PPT/pamphlet_v3.pptx"
 prs.save(output_path)
 print(f"PPT 저장 완료: {output_path}")
 print(f"총 {len(prs.slides)} 슬라이드")
