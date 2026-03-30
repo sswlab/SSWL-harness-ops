@@ -715,7 +715,191 @@ style_table(tbl, headers, data, col_widths=[3.5, 3.0, 3.0])
 
 
 # ============================================================
-# 슬라이드 9: 확장 가능성 — 100가지 하네스 아이디어
+# 슬라이드 9: 현재 한계 — 툴체인 실행 레이어 부재
+# ============================================================
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+add_bg(slide, WHITE)
+
+tb = add_textbox(slide, 0.8, 0.4, 11, 0.7)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "현재 한계: 툴체인 실행 레이어 부재"
+set_font(run, size=28, bold=True, color=NAVY)
+add_rect(slide, 0.8, 1.05, 3.0, 0.05, INDIGO)
+
+# 좌측: 있는 것 vs 없는 것
+add_rect(slide, 0.5, 1.4, 6.0, 2.8, RGBColor(0xFF, 0xEB, 0xEE), RGBColor(0xEF, 0x9A, 0x9A))
+tb = add_textbox(slide, 0.7, 1.5, 5.6, 0.4)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "현재 구조의 문제"
+set_font(run, size=16, bold=True, color=RGBColor(0xC6, 0x28, 0x28))
+
+headers = ["있는 것 (설명서)", "없는 것 (실행 레이어)"]
+data = [
+    ['"data-fetcher는 JSOC에서 수집한다"', "JSOC 다운로드를 실행하는 도구"],
+    ['"model-runner는 모델을 실행한다"', "python3 run.py를 자동 체이닝하는 로직"],
+    ['"task-executor가 순차 실행한다"', "Step1→Step2 출력을 자동 연결하는 파이프라인"],
+]
+tbl = add_table(slide, 4, 2, 0.5, 2.1, 6.0, 1.8)
+style_table(tbl, headers, data, col_widths=[3.0, 3.0])
+
+# 우측: 결과
+add_rect(slide, 6.8, 1.4, 6.0, 2.8, LIGHT_BG, TABLE_BORDER)
+tb = add_textbox(slide, 7.0, 1.5, 5.6, 0.4)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "그래서 어떻게 되는가"
+set_font(run, size=16, bold=True, color=NAVY)
+
+tb = add_textbox(slide, 7.0, 2.0, 5.6, 2.0)
+tf = tb.text_frame
+tf.word_wrap = True
+add_paragraph(tf, 'AI가 매번 즉흥적으로 코드를 작성하거나 검색', size=12, color=DARK_GRAY, space_after=6)
+add_paragraph(tf, '같은 작업을 할 때마다 다른 방법으로 실행', size=12, color=DARK_GRAY, space_after=6)
+add_paragraph(tf, '연구실의 검증된 코드를 정확히 호출하지 못함', size=12, color=DARK_GRAY, space_after=6)
+add_paragraph(tf, 'Step간 데이터 전달을 AI가 매번 추론해야 함', size=12, color=DARK_GRAY, space_after=6)
+add_paragraph(tf, '→ 재현성 없음, 오류 빈발, 신뢰도 낮음', size=13, bold=True, color=RGBColor(0xC6, 0x28, 0x28))
+
+# 하단: 어시웍스 참고
+add_rect(slide, 0.5, 4.5, 12.3, 2.3, RGBColor(0xE3, 0xF2, 0xFD), RGBColor(0x90, 0xCA, 0xF9))
+tb = add_textbox(slide, 0.7, 4.6, 5.0, 0.4)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "참고: AssiWorks의 4계층 모델"
+set_font(run, size=15, bold=True, color=BLUE)
+
+# 4계층 박스
+layers_assi = [
+    ("Tool", "실행 가능한 최소 단위\n(API, 스크립트, LLM)"),
+    ("Flow", "Tool들을 순차/조건/\n병렬로 연결한 체인"),
+    ("Agent", "자연어 이해 →\n적절한 Tool/Flow 선택"),
+    ("Team", "여러 Agent가\n협업하여 복합 처리"),
+]
+for i, (name, desc) in enumerate(layers_assi):
+    x = 0.7 + i * 3.05
+    add_rect(slide, x, 5.1, 2.8, 1.5, WHITE, BLUE)
+    tb2 = add_textbox(slide, x + 0.1, 5.15, 2.6, 0.35)
+    p2 = tb2.text_frame.paragraphs[0]
+    p2.alignment = PP_ALIGN.CENTER
+    r2 = p2.add_run()
+    r2.text = f"Layer {i+1}: {name}"
+    set_font(r2, size=12, bold=True, color=BLUE)
+    tb3 = add_textbox(slide, x + 0.1, 5.5, 2.6, 0.9)
+    tb3.text_frame.word_wrap = True
+    p3 = tb3.text_frame.paragraphs[0]
+    p3.alignment = PP_ALIGN.CENTER
+    r3 = p3.add_run()
+    r3.text = desc
+    set_font(r3, size=10, color=GRAY)
+
+# 화살표
+for i in range(3):
+    x = 3.35 + i * 3.05
+    tb5 = add_textbox(slide, x, 5.55, 0.4, 0.4)
+    p5 = tb5.text_frame.paragraphs[0]
+    p5.alignment = PP_ALIGN.CENTER
+    r5 = p5.add_run()
+    r5.text = "→"
+    set_font(r5, size=16, bold=True, color=BLUE)
+
+
+# ============================================================
+# 슬라이드 10: 해결 — 3계층 하네스 아키텍처
+# ============================================================
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+add_bg(slide, WHITE)
+
+tb = add_textbox(slide, 0.8, 0.4, 11, 0.7)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "해결: 3계층 하네스 아키텍처 (Tool + Agent + Skill)"
+set_font(run, size=28, bold=True, color=NAVY)
+add_rect(slide, 0.8, 1.05, 3.0, 0.05, INDIGO)
+
+# 3계층 다이어그램 (세로 스택)
+LAYER_COLORS = [
+    (RGBColor(0xE8, 0xEA, 0xF6), INDIGO, "Layer 3: Skills (오케스트레이터)",
+     '사용자 요청 → 어떤 Flow를 실행할지 판단\n.claude/skills/*/skill.md'),
+    (LIGHT_GREEN, GREEN, "Layer 2: Agents (지능형 판단)",
+     'Flow 실행 중 예외 처리, 대안 탐색, 사용자 소통\n.claude/agents/*.md'),
+    (RGBColor(0xFF, 0xF8, 0xE1), RGBColor(0xFF, 0x8F, 0x00), "Layer 1: Tools & Flows (실행 레이어)  ← 신규",
+     '실제 코드를 래핑한 실행 단위 + 체이닝 정의\ntools/*.yaml + flows/*.yaml + scripts/*.py'),
+]
+
+for i, (bg, border, title, desc) in enumerate(LAYER_COLORS):
+    y = 1.4 + i * 1.5
+    add_rect(slide, 0.5, y, 6.5, 1.3, bg, border)
+    tb2 = add_textbox(slide, 0.7, y + 0.05, 6.1, 0.4)
+    p2 = tb2.text_frame.paragraphs[0]
+    r2 = p2.add_run()
+    r2.text = title
+    set_font(r2, size=14, bold=True, color=border)
+    tb3 = add_textbox(slide, 0.7, y + 0.45, 6.1, 0.7)
+    tb3.text_frame.word_wrap = True
+    p3 = tb3.text_frame.paragraphs[0]
+    r3 = p3.add_run()
+    r3.text = desc
+    set_font(r3, size=11, color=DARK_GRAY)
+
+# 우측: Tool 정의 예시
+add_rect(slide, 7.3, 1.4, 5.5, 2.6, WHITE, RGBColor(0xFF, 0x8F, 0x00))
+tb = add_textbox(slide, 7.5, 1.5, 5.1, 0.35)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "Tool 정의 예시: fetch_aia.yaml"
+set_font(run, size=13, bold=True, color=RGBColor(0xFF, 0x8F, 0x00))
+
+tb = add_textbox(slide, 7.5, 1.85, 5.1, 2.0)
+tf = tb.text_frame
+tf.word_wrap = True
+add_paragraph(tf, 'name: fetch_aia', size=10, color=DARK_GRAY, space_after=1)
+add_paragraph(tf, 'type: python_script', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, 'script: scripts/fetch_aia.py', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, 'inputs:', size=10, color=DARK_GRAY, space_after=1)
+add_paragraph(tf, '  - wavelength: int (94~335)', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, '  - time_start, time_end: string', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, '  - output_dir: path', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, 'outputs:', size=10, color=DARK_GRAY, space_after=1)
+add_paragraph(tf, '  - fits_files: directory', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, '  - manifest: json', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, 'dependencies: [drms, astropy]', size=10, color=GRAY)
+
+# 우측 하단: Flow 정의 예시
+add_rect(slide, 7.3, 4.2, 5.5, 2.6, WHITE, INDIGO)
+tb = add_textbox(slide, 7.5, 4.3, 5.1, 0.35)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = "Flow 정의 예시: dem_pipeline.yaml"
+set_font(run, size=13, bold=True, color=INDIGO)
+
+tb = add_textbox(slide, 7.5, 4.65, 5.1, 2.0)
+tf = tb.text_frame
+tf.word_wrap = True
+add_paragraph(tf, 'name: dem_pipeline', size=10, color=DARK_GRAY, space_after=1)
+add_paragraph(tf, 'steps:', size=10, color=DARK_GRAY, space_after=1)
+add_paragraph(tf, '  1. fetch_data → tool: fetch_aia', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, '  2. preprocess → tool: preprocess_aia', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, '     input: {{steps.fetch_data.outputs.fits_files}}', size=10, color=RGBColor(0xFF, 0x8F, 0x00), space_after=1)
+add_paragraph(tf, '  3. generate → tool: pix2pixcc_inference', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, '  4. dem → tool: dem_inversion', size=10, color=GRAY, space_after=1)
+add_paragraph(tf, '  5. visualize → tool: dem_visualizer', size=10, color=GRAY, space_after=3)
+add_paragraph(tf, '→ Step간 데이터가 {{변수}}로 자동 연결', size=10, bold=True, color=INDIGO)
+
+# 하단 좌측: 비교
+add_rect(slide, 0.5, 5.9, 6.5, 0.9, LIGHT_BG, TABLE_BORDER)
+tb = add_textbox(slide, 0.7, 5.95, 6.1, 0.8)
+tf = tb.text_frame
+tf.word_wrap = True
+p = tf.paragraphs[0]
+p.alignment = PP_ALIGN.CENTER
+run = p.add_run()
+run.text = "Tool+Flow가 있으면: 검증된 코드 즉시 호출 · Step 자동 연결 · 재현성 보장 · 연구실 코드 직접 래핑"
+set_font(run, size=13, bold=True, color=NAVY)
+
+
+# ============================================================
+# 슬라이드 11: 확장 가능성 — 100가지 하네스 아이디어
 # ============================================================
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 add_bg(slide, WHITE)
@@ -776,102 +960,102 @@ add_paragraph(tf, "자동 생성해야 합니다.", size=11, bold=True, color=NA
 
 
 # ============================================================
-# 슬라이드 10: 코드 → 하네스 자동 생성 절차
+# 슬라이드 12: 코드 → 하네스 자동 생성 절차 (Tool/Flow 포함)
 # ============================================================
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 add_bg(slide, WHITE)
 
-tb = add_textbox(slide, 0.8, 0.4, 11, 0.7)
-p = tb.text_frame.paragraphs[0]
-run = p.add_run()
-run.text = '코드 헤리티지 → 하네스 자동 생성'
-set_font(run, size=28, bold=True, color=NAVY)
-add_rect(slide, 0.8, 1.05, 3.0, 0.05, INDIGO)
-
-# 5개 Phase 박스 (가로 배열)
 AMBER = RGBColor(0xFF, 0x8F, 0x00)
 LIGHT_AMBER = RGBColor(0xFF, 0xF8, 0xE1)
 
+tb = add_textbox(slide, 0.8, 0.4, 11, 0.7)
+p = tb.text_frame.paragraphs[0]
+run = p.add_run()
+run.text = '코드 헤리티지 → Tool/Flow + 하네스 자동 생성'
+set_font(run, size=28, bold=True, color=NAVY)
+add_rect(slide, 0.8, 1.05, 3.0, 0.05, INDIGO)
+
+# 6개 Phase 박스 (가로 배열)
 phases = [
-    ("Phase 0", "코드 수집", "연구실 어디에\n뭐가 있는가\n(inventory)"),
-    ("Phase 1", "코드 분석", "code-profiler가\n코드를 읽고\nCode Profile 생성"),
-    ("Phase 2", "하네스 설계", "Code Profile →\nBlueprint\n(그루핑/구조 설계)"),
-    ("Phase 3", "자동 생성", "Blueprint →\n에이전트/스킬\n.md 파일 생성"),
-    ("Phase 4", "검증/배포", "드라이런 +\n사용자 피드백 +\n배포"),
+    ("Phase 0", "코드 수집", "연구실 어디에\n뭐가 있는가", INDIGO),
+    ("Phase 1", "코드 분석", "code-profiler가\nCode Profile 생성", INDIGO),
+    ("Phase 2", "하네스 설계", "Code Profile →\nBlueprint 그루핑", INDIGO),
+    ("Phase 2.5", "Tool/Flow 생성", "실행 가능한 도구\n+ 툴체인 YAML", AMBER),
+    ("Phase 3", "에이전트 생성", "에이전트/스킬\n.md 파일 생성", INDIGO),
+    ("Phase 4", "검증/배포", "드라이런 +\n사용자 피드백", INDIGO),
 ]
 
-for i, (phase, title, desc) in enumerate(phases):
-    x = 0.5 + i * 2.55
-    # Phase 박스
-    add_rect(slide, x, 1.4, 2.3, 3.0, WHITE, INDIGO)
-    # Phase 번호 (상단 바)
-    add_rect(slide, x, 1.4, 2.3, 0.5, INDIGO)
-    tb2 = add_textbox(slide, x, 1.4, 2.3, 0.5)
+for i, (phase, title, desc, color) in enumerate(phases):
+    x = 0.3 + i * 2.15
+    add_rect(slide, x, 1.4, 1.95, 2.6, WHITE, color)
+    add_rect(slide, x, 1.4, 1.95, 0.45, color)
+    tb2 = add_textbox(slide, x, 1.4, 1.95, 0.45)
     p2 = tb2.text_frame.paragraphs[0]
     p2.alignment = PP_ALIGN.CENTER
     r2 = p2.add_run()
     r2.text = phase
-    set_font(r2, size=13, bold=True, color=WHITE)
-    # 제목
-    tb3 = add_textbox(slide, x + 0.1, 2.0, 2.1, 0.4)
+    set_font(r2, size=11, bold=True, color=WHITE)
+    tb3 = add_textbox(slide, x + 0.05, 1.9, 1.85, 0.35)
     p3 = tb3.text_frame.paragraphs[0]
     p3.alignment = PP_ALIGN.CENTER
     r3 = p3.add_run()
     r3.text = title
-    set_font(r3, size=14, bold=True, color=NAVY)
-    # 설명
-    tb4 = add_textbox(slide, x + 0.1, 2.5, 2.1, 1.7)
+    set_font(r3, size=12, bold=True, color=color)
+    tb4 = add_textbox(slide, x + 0.05, 2.3, 1.85, 1.4)
     tb4.text_frame.word_wrap = True
     p4 = tb4.text_frame.paragraphs[0]
     p4.alignment = PP_ALIGN.CENTER
     r4 = p4.add_run()
     r4.text = desc
-    set_font(r4, size=11, color=GRAY)
+    set_font(r4, size=10, color=GRAY)
 
-# 화살표 텍스트 (Phase 사이)
-for i in range(4):
-    x = 2.6 + i * 2.55
-    tb5 = add_textbox(slide, x, 2.5, 0.5, 0.4)
+# 화살표
+for i in range(5):
+    x = 2.1 + i * 2.15
+    tb5 = add_textbox(slide, x, 2.3, 0.4, 0.4)
     p5 = tb5.text_frame.paragraphs[0]
     p5.alignment = PP_ALIGN.CENTER
     r5 = p5.add_run()
     r5.text = "→"
-    set_font(r5, size=20, bold=True, color=INDIGO)
+    set_font(r5, size=16, bold=True, color=INDIGO)
 
-# 하단: 왜 코드를 읽어야 하는가
-add_rect(slide, 0.5, 4.7, 6.0, 2.2, LIGHT_AMBER, RGBColor(0xFF, 0xCA, 0x28))
-tb = add_textbox(slide, 0.7, 4.8, 5.6, 0.4)
+# 하단 좌측: Phase 2.5 상세 (핵심 신규)
+add_rect(slide, 0.3, 4.3, 6.3, 2.8, LIGHT_AMBER, RGBColor(0xFF, 0xCA, 0x28))
+tb = add_textbox(slide, 0.5, 4.4, 5.9, 0.4)
 p = tb.text_frame.paragraphs[0]
 run = p.add_run()
-run.text = "왜 코드를 먼저 읽어야 하는가"
-set_font(run, size=14, bold=True, color=AMBER)
+run.text = "Phase 2.5: Tool/Flow 생성 (핵심 추가)"
+set_font(run, size=15, bold=True, color=AMBER)
 
-tb = add_textbox(slide, 0.7, 5.2, 5.6, 1.5)
+tb = add_textbox(slide, 0.5, 4.8, 5.9, 2.1)
 tf = tb.text_frame
 tf.word_wrap = True
-add_paragraph(tf, '샘플: "synoptic map 만드는 하네스" (일반적 설명)', size=11, color=GRAY, space_after=4)
-add_paragraph(tf, '코드 기반: make_synmap.py의 실제 인자,', size=11, bold=True, color=DARK_GRAY, space_after=1)
-add_paragraph(tf, '의존성, 출력 형식을 정확히 반영한 하네스', size=11, bold=True, color=DARK_GRAY, space_after=8)
-add_paragraph(tf, '→ 코드를 읽지 않으면 AI가 일반적 방법을 시도', size=10, color=GRAY, space_after=2)
-add_paragraph(tf, '→ 코드를 읽으면 연구실 코드를 정확히 호출', size=10, color=AMBER)
+add_paragraph(tf, 'Code Profile의 각 실행 step:', size=11, bold=True, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, '  → Tool YAML (입출력 스키마 + 래퍼 스크립트)', size=11, color=GRAY, space_after=4)
+add_paragraph(tf, 'Code Profile의 전체 파이프라인:', size=11, bold=True, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, '  → Flow YAML (Tool 체이닝 + {{변수}} 자동 연결)', size=11, color=GRAY, space_after=4)
+add_paragraph(tf, '모델/가중치:', size=11, bold=True, color=DARK_GRAY, space_after=2)
+add_paragraph(tf, '  → model_registry 등록 (model_card + tool.yaml)', size=11, color=GRAY, space_after=6)
+add_paragraph(tf, '이 단계가 있어야 에이전트가 "설명"이 아닌 "실행"을 한다', size=11, bold=True, color=AMBER)
 
-# 하단 우측: harness-factory 개념
-add_rect(slide, 6.8, 4.7, 6.0, 2.2, LIGHT_BG, TABLE_BORDER)
-tb = add_textbox(slide, 7.0, 4.8, 5.6, 0.4)
+# 하단 우측: harness-factory
+add_rect(slide, 6.8, 4.3, 6.0, 2.8, LIGHT_BG, TABLE_BORDER)
+tb = add_textbox(slide, 7.0, 4.4, 5.6, 0.4)
 p = tb.text_frame.paragraphs[0]
 run = p.add_run()
-run.text = "harness-factory: 메타-하네스"
+run.text = "harness-factory: 전체를 자동화하는 메타-하네스"
 set_font(run, size=14, bold=True, color=NAVY)
 
-tb = add_textbox(slide, 7.0, 5.2, 5.6, 1.5)
+tb = add_textbox(slide, 7.0, 4.8, 5.6, 2.1)
 tf = tb.text_frame
 tf.word_wrap = True
-add_paragraph(tf, '위 5단계를 하나의 하네스로 자동화:', size=11, color=DARK_GRAY, space_after=6)
+add_paragraph(tf, '4개 에이전트가 Phase 0~4를 자동 수행:', size=11, color=DARK_GRAY, space_after=6)
 add_paragraph(tf, 'code-profiler — 코드 자동 분석', size=11, color=GRAY, space_after=2)
 add_paragraph(tf, 'harness-designer — 하네스 구조 설계', size=11, color=GRAY, space_after=2)
-add_paragraph(tf, 'harness-generator — .md 파일 자동 생성', size=11, color=GRAY, space_after=2)
-add_paragraph(tf, 'harness-validator — 검증 + 배포', size=11, color=GRAY, space_after=6)
-add_paragraph(tf, '"코드 경로만 알려주면 하네스가 자동으로 만들어집니다"', size=11, bold=True, color=NAVY)
+add_paragraph(tf, 'tool-generator — Tool YAML + Flow YAML 생성', size=11, bold=True, color=AMBER, space_after=2)
+add_paragraph(tf, 'harness-validator — 드라이런 검증 + 배포', size=11, color=GRAY, space_after=8)
+add_paragraph(tf, '"코드 경로만 알려주면', size=12, bold=True, color=NAVY, space_after=1)
+add_paragraph(tf, ' Tool + Flow + 에이전트가 자동으로 만들어집니다"', size=12, bold=True, color=NAVY)
 
 
 # ============================================================
@@ -1035,7 +1219,7 @@ set_font(run, size=11, color=RGBColor(0x79, 0x86, 0xCB), italic=True)
 # ============================================================
 # 저장
 # ============================================================
-output_path = "/home/youn_j/SSWL-harness-ops/PPT/pamphlet_v3.pptx"
+output_path = "/home/youn_j/SSWL-harness-ops/PPT/pamphlet_r5.pptx"
 prs.save(output_path)
 print(f"PPT 저장 완료: {output_path}")
 print(f"총 {len(prs.slides)} 슬라이드")
