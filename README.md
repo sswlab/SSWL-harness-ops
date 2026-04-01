@@ -21,6 +21,12 @@ SSWL-harness-ops/
 │       ├── agents/  (5개)
 │       └── skills/  (3개)
 │
+├── 02-conference-presentation-generator/  ← 학회 발표 PPT 생성 하네스
+│   └── .claude/
+│       ├── CLAUDE.md
+│       ├── agents/  (5개)
+│       └── skills/  (3개)
+│
 ├── docs/                              # 프로젝트 참고 문서
 └── PPT/                               # 팜플렛/발표 자료
 ```
@@ -50,6 +56,27 @@ claude
 ```
 > "최근 1달 SDO/HMI 데이터로 synoptic map 만들어줘"
 > "코로나홀 탐지 모델을 등록해줘"
+```
+
+### 02-conference-presentation-generator — 학회 발표 PPT 생성
+
+```bash
+cd /home/youn_j/SSWL-harness-ops/02-conference-presentation-generator
+claude
+```
+
+연구 결과를 입력하면 **콘텐츠 추출 → 스토리 설계 → 슬라이드 구성 → PPTX 생성 → 발표 코칭**까지 수행합니다.
+
+| 에이전트 | 역할 |
+|---|---|
+| content-extractor | 논문/결과에서 핵심 메시지, Figure 추출 |
+| story-architect | 발표 내러티브 설계, 시간 배분 |
+| slide-composer | 슬라이드별 콘텐츠/레이아웃 구성 |
+| pptx-engineer | python-pptx로 실제 .pptx 파일 생성 |
+| deck-reviewer | 품질 검토 + 발표자 가이드/Q&A 준비 |
+
+```
+> "01-research-production의 태양 플레어 연구 결과로 15분 AGU 발표 PPT 만들어줘"
 ```
 
 ### 01-research-production — 연구 생산 (논문 파이프라인)
