@@ -27,6 +27,12 @@ SSWL-harness-ops/
 │       ├── agents/  (5개)
 │       └── skills/  (3개)
 │
+├── 03-paper-writer/                   ← 논문 작성 및 피어리뷰 하네스
+│   └── .claude/
+│       ├── CLAUDE.md
+│       ├── agents/  (4개)
+│       └── skills/  (4개)
+│
 ├── docs/                              # 프로젝트 참고 문서
 └── PPT/                               # 팜플렛/발표 자료
 ```
@@ -79,6 +85,27 @@ claude
 > "01-research-production의 태양 플레어 연구 결과로 15분 AGU 발표 PPT 만들어줘"
 ```
 
+### 03-paper-writer — 논문 작성 및 피어리뷰
+
+```bash
+cd /home/youn_j/SSWL-harness-ops/03-paper-writer
+claude
+```
+
+연구 결과를 입력하면 **논문 초안 작성 → 에디터 접수 → 리뷰어 병렬 심사 → 리비전 → 판정**까지 실제 저널 피어리뷰 프로세스를 시뮬레이션합니다. 최대 3회 리비전 후 Accept 시 저널 템플릿 기반 LaTeX + PDF를 생성합니다.
+
+| 에이전트 | 역할 |
+|---|---|
+| researcher | 연구 결과 정리, 논문 초안 + 커버레터 작성, 리비전 수행 |
+| editor | 논문 접수, 리뷰어 배정(전문분야/성격), 리뷰 취합, 판정 |
+| reviewer-1 | 한줄씩 팩트체크, 전문분야 중심 리뷰 |
+| reviewer-2 | 한줄씩 팩트체크, reviewer-1과 다른 전문분야 중심 리뷰 (병렬) |
+
+```
+> "이 연구 결과로 ApJ에 투고할 논문 써줘"
+> "01-research-production의 태양 플레어 연구 결과로 논문 만들어줘"
+```
+
 ### 01-research-production — 연구 생산 (논문 파이프라인)
 
 ```bash
@@ -127,4 +154,6 @@ pip install sunpy astropy aiapy drms pandas numpy scipy matplotlib scikit-learn
 
 - 루트 하네스: `.claude/CLAUDE.md`
 - 연구 생산 하네스: `01-research-production/.claude/CLAUDE.md`
+- 학회 발표 PPT 하네스: `02-conference-presentation-generator/.claude/CLAUDE.md`
+- 논문 작성 하네스: `03-paper-writer/.claude/CLAUDE.md`
 - 프로젝트 시나리오: `docs/scenarios.md`
