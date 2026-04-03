@@ -18,35 +18,115 @@ description: >
 
 ---
 
+## 필수 입력 확인 및 검증
+
+파이프라인 시작 전, 아래 4가지 항목을 **모두** 확보해야 한다.
+사용자의 쿼리에서 확인되지 않는 항목은 **반드시 되물어서** 확보한다.
+한 번에 모든 누락 항목을 질문한다 (항목별로 따로 묻지 않는다).
+
+### 필수 항목
+
+| # | 항목 | 변수 | 누락 시 질문 |
+|---|---|---|---|
+| 1 | **연구 주제** | `{주제}` | "어떤 주제를 연구할까요?" |
+| 2 | **연구 목적** | `{목적}` | "이 연구의 최종 목적(왜, 무엇을 달성)을 1~2문장으로 알려주세요." |
+| 3 | **연구 모드** | `{모드}` | 아래 모드 선택지를 제시 |
+| 4 | **작업 경로** | `{작업경로}` | "결과물을 저장할 작업 경로를 알려주세요." |
+
+**연구 목적**은 파이프라인 전체에 걸쳐 모든 에이전트의 판단 기준이 된다:
+- literature-reviewer: 목적 달성에 필요한 문헌을 우선 선별
+- research-designer: 목적을 검증할 수 있는 실험 설계
+- research-executor: 목적에 부합하는 결과 생성에 집중
+- reviewer: 결과가 연구 목적을 달성했는지 판정
+- paper-writer: 논문의 contribution을 목적에 맞게 서술
+
+`{목적}`은 `{작업경로}/research-note.md` 최상단에 기록하여, 모든 에이전트가 Phase 시작 시 참조한다.
+
+### 연구 모드 선택지
+
+사용자에게 다음을 제시하여 선택받는다:
+
+```
+연구 모드를 선택해주세요:
+
+[1] 탐색형 (Survey)
+    - 넓은 범위 문헌조사 중심 (30~50편)
+    - 실험은 최소/생략, 리뷰 페이퍼 스타일 산출물
+    - 적합: 분야 동향 파악, 리뷰 논문, 새 프로젝트 착수 전 조사
+
+[2] 심층형 (Deep Dive)
+    - 특정 주제에 집중 (문헌 10~15편)
+    - 가설 → 실험 → 검증 전체 수행, 오리지널 리서치 산출물
+    - 적합: 가설 검증, 모델 개발, 저널 투고용 연구
+
+[3] 전체 (Full Pipeline)
+    - 넓은 문헌조사 + 깊은 실험 모두 수행
+    - 적합: 새 분야 진입 + 첫 논문, 종합적 연구
+```
+
+---
+
+## 모드별 에이전트 프리셋
+
+모드가 확정되면, 각 에이전트에 해당 프리셋을 전달한다.
+
+### 탐색형 (Survey)
+
+| Phase | 에이전트 | 프리셋 |
+|---|---|---|
+| 1 | literature-reviewer | **핵심 Phase.** 논문 30~50편 검토. 넓은 키워드(동의어, 인접 분야 포함). 연구 동향 타임라인 + 방법론 분류표 작성. 미해결 과제(open questions) 5개 이상 식별. |
+| 2 | research-designer | 경량 수행. 분석 프레임워크 수준의 설계. 실험 변수/가설 대신 "분류 기준"과 "비교 축"을 정의. |
+| 3 | research-executor | **최소/생략.** 기존 논문에서 추출한 데이터로 비교표/요약 Figure만 생성. 새 실험 코드 작성하지 않음. |
+| 4 | reviewer | 문헌 커버리지 중심 검토. "주요 논문이 누락되지 않았는가", "분류 체계가 일관적인가" 판정. |
+| 5 | paper-writer | 리뷰 페이퍼 스타일. Introduction에 분야 배경을 상세히, Results 대신 "Current State of Research" 서술. |
+
+### 심층형 (Deep Dive)
+
+| Phase | 에이전트 | 프리셋 |
+|---|---|---|
+| 1 | literature-reviewer | 보조 Phase. 논문 10~15편, 좁은 키워드. 직접 관련 선행연구에 집중. 연구 갭 1~2개만 식별. |
+| 2 | research-designer | **핵심 Phase.** 검증 가능한 가설, 구체적 실험 변수, Baseline vs Experiment 설계, 정량적 평가 지표(metric) 정의. |
+| 3 | research-executor | **핵심 Phase.** 코드 작성, 데이터 수집/처리, 모델 학습/평가. Figure 3~5개, Table 1~2개. 재현 가능한 파이프라인 구축. |
+| 4 | reviewer | 실험 재현성 중심 검토. "설계대로 실행되었는가", "수치가 코드와 일치하는가", "평가 지표가 계산되었는가" 판정. |
+| 5 | paper-writer | 오리지널 리서치 스타일. 가설-방법-결과-해석 흐름. Contribution을 연구 목적에 직접 연결. |
+
+### 전체 (Full Pipeline)
+
+| Phase | 에이전트 | 프리셋 |
+|---|---|---|
+| 1 | literature-reviewer | 논문 20~30편. 넓은 커버리지 + 핵심 논문 깊이 분석. 연구 동향 + 연구 갭 모두 식별. |
+| 2 | research-designer | 심층형과 동일. |
+| 3 | research-executor | 심층형과 동일. |
+| 4 | reviewer | 문헌 커버리지 + 실험 재현성 모두 검토. |
+| 5 | paper-writer | 오리지널 리서치 스타일. Introduction에 충실한 배경 + 강한 실험 결과. |
+
+---
+
 ## 작업 경로 설정
 
 **하네스 디렉토리의 `_workspace/`는 빈 스캐폴드(디렉토리 구조 템플릿)이다. 실행 결과물은 사용자가 지정한 외부 경로에 저장한다.**
 
 1. 사용자가 쿼리에 출력 경로를 명시한 경우 → 해당 경로를 `{작업경로}`로 사용
-2. 사용자가 출력 경로를 명시하지 않은 경우 → **반드시 경로를 질문한다**:
-   ```
-   📂 결과물을 저장할 작업 경로를 알려주세요.
-   예: /home/youn_j/projects/flare-prediction/_workspace
-   ```
+2. 사용자가 출력 경로를 명시하지 않은 경우 → 필수 입력 확인 단계에서 질문
 3. 경로가 확정되면 해당 경로에 필요한 하위 디렉토리(`code/`, `figures/`, `tables/` 등)를 생성한다
-4. 이후 모든 `_workspace/` 참조는 사용자가 지정한 `{작업경로}`로 치환된다
+4. 이후 모든 `_workspace/` 참조는 `{작업경로}`로 치환된다
 
 ---
 
 ## 실행 전 안내 메시지
 
-파이프라인 시작 시 사용자에게 다음을 안내한다:
+**모든 필수 항목이 확보된 후**, 파이프라인 시작 전 사용자에게 다음을 안내한다:
 
 ```
 📋 연구 생산 파이프라인을 시작합니다.
 
-• 무제한의 시간을 들여 꼼꼼하게 진행합니다.
-• 1M 토큰을 최대한 활용하여 깊이 있는 연구를 수행합니다.
+연구 주제: "{주제}"
+연구 목적: "{목적}"
+연구 모드: {모드} ({모드 설명})
+작업 경로: {작업경로}
+
 • 모든 생각의 흐름은 {작업경로}/research-note.md에 누적 기록됩니다.
 • 각 단계 완료 시 진행 상황을 보고합니다.
-
-연구 주제: "{사용자 제시 주제}"
-작업 경로: "{작업경로}"
 
 파이프라인을 시작할까요?
 ```
@@ -170,6 +250,14 @@ description: >
 ```markdown
 # Research Note
 
+## 연구 개요
+- **주제**: {주제}
+- **목적**: {목적}
+- **모드**: {모드}
+- **시작일**: {timestamp}
+
+---
+
 ## [Phase 1: 문헌조사] {timestamp}
 ### literature-reviewer
 - 검색 전략 선택 이유: ...
@@ -205,78 +293,109 @@ description: >
 
 ## 테스트 시나리오
 
-### 시나리오 1: 정상 흐름 — 태양 플레어 예측 연구
+### 시나리오 1: 심층형 — 태양 플레어 예측 연구
 
 ```
-사용자: "GOES XRS 데이터를 이용한 태양 플레어 발생 예측 연구를 해줘"
+사용자: "GOES XRS 데이터를 이용한 태양 플레어 발생 예측 연구를 해줘.
+        목적: 기존 임계값 기반 예측 대비 ML의 우위를 정량적으로 입증.
+        모드: 심층형
+        경로: /home/youn_j/projects/flare-prediction/_workspace"
 
-Phase 1: literature-reviewer
-  → arXiv/ADS에서 "solar flare prediction GOES XRS" 검색
-  → 핵심 선행연구 15편 선별, 연구 갭 식별
+→ 필수 항목 확인: 4개 모두 확보 ✓
+
+Phase 1: literature-reviewer [심층형 프리셋: 10~15편, 좁은 키워드]
+  → "solar flare prediction GOES XRS machine learning" 검색
+  → 직접 관련 선행연구 12편 선별, 연구 갭 1개 식별
   → 01_literature_review.md, references.bib 생성
 
-Phase 2: research-designer
+Phase 2: research-designer [심층형 프리셋: 가설+Baseline vs Experiment]
   → 가설: "GOES XRS의 전구체 패턴으로 M급 이상 플레어를 24시간 전 예측 가능"
   → 실험 설계: Baseline(임계값 기반) vs Experiment(ML 기반)
+  → 평가 지표: TSS, HSS, AUC-ROC
   → 02_research_design.md 생성
 
-Phase 3: research-executor
+Phase 3: research-executor [심층형 프리셋: 전체 실행]
   → GOES XRS 데이터 다운로드 (2020-2025)
-  → 전처리, 특징 추출
-  → Baseline/Experiment 실행
+  → 전처리, 특징 추출, 모델 학습
   → Figure 4개, Table 1개 생성
   → 03_execution_log.md 생성
 
-Phase 4: reviewer (검토)
-  → 설계-결과 대조: 모든 항목 PASS
+Phase 4: reviewer [심층형 프리셋: 재현성 중심]
+  → 목적 대비 검증: "ML이 임계값 기반보다 우위인가?" → TSS 비교 확인
   → 판정: PASS
-  → 05_review_report.md 생성
 
-Phase 5: paper-writer
-  → 논문 초안 작성 (Figure 4 + Table 1 = 5개)
-  → 04_paper_draft.md 생성
-
-Phase 6: reviewer (심사)
-  → 문장별 팩트체크, 관대하게 판정
-  → 판정: Minor Revision
-  → 06_referee_report.md 생성
+Phase 5~6: 정상 진행
 
 → 최종 결과를 사용자에게 전달
 ```
 
-### 시나리오 2: 루프백 흐름 — 코로나 온도 분석
+### 시나리오 2: 탐색형 — 코로나 가열 메커니즘 서베이
 
 ```
-사용자: "SDO/AIA 다중 파장으로 코로나 온도 분포를 분석해줘"
+사용자: "코로나 가열 메커니즘 연구 동향을 조사해줘."
 
-Phase 1: literature-reviewer
-  → DEM(Differential Emission Measure) 관련 문헌 조사
-  → 01_literature_review.md 생성
+→ 필수 항목 확인:
+  ✓ 주제: 코로나 가열 메커니즘 연구 동향
+  ✗ 목적: 누락 → 질문
+  ✗ 모드: 누락 → 질문
+  ✗ 경로: 누락 → 질문
 
-Phase 2: research-designer (1차)
-  → DEM 방법 중 regularized inversion 선택
-  → AIA 6채널 사용, 1일 데이터 분석 설계
-  → 02_research_design.md 생성
+→ 오케스트레이터 질문:
+  "다음 정보를 알려주세요:
+   1. 연구 목적: 이 연구로 최종 달성하고자 하는 것은?
+   2. 연구 모드: [1] 탐색형 [2] 심층형 [3] 전체
+   3. 작업 경로: 결과물 저장 경로"
 
-Phase 3: research-executor
-  → 코드 작성 및 실행
-  → DEM 결과 생성, Figure 3개
+→ 사용자 응답:
+  "1. 최근 10년간 나노플레어 vs 파동 가열 논쟁의 현황을 정리하여 신규 연구 방향을 도출한다.
+   2. 탐색형
+   3. /home/youn_j/projects/coronal-heating-survey/_workspace"
 
-Phase 4: reviewer (검토)
-  → 문제 발견: 평가 지표(chi-squared)가 미계산
+Phase 1: literature-reviewer [탐색형 프리셋: 30~50편, 넓은 키워드]
+  → "coronal heating nanoflare wave" + 동의어/인접 분야 검색
+  → 38편 선별, 연구 동향 타임라인 작성
+  → 미해결 과제 6개 식별
+
+Phase 2: research-designer [탐색형 프리셋: 분석 프레임워크]
+  → 비교 축 정의: 관측 증거 / 시뮬레이션 결과 / 에너지 예산
+  → 분류 기준: nanoflare 계열 vs wave 계열 vs 하이브리드
+
+Phase 3: research-executor [탐색형 프리셋: 최소]
+  → 기존 논문 데이터로 비교표 Figure 2개 생성
+  → 새 실험 코드 없음
+
+Phase 4: reviewer [탐색형 프리셋: 커버리지 중심]
+  → 목적 대비 검증: "나노플레어 vs 파동 논쟁이 균형 있게 다뤄졌는가?"
+  → 판정: PASS
+
+Phase 5: paper-writer [탐색형 프리셋: 리뷰 페이퍼]
+  → "Current State of Research" 스타일 서술
+  → 미해결 과제 기반 향후 연구 제안
+
+Phase 6: 정상 진행
+
+→ 최종 결과를 사용자에게 전달
+```
+
+### 시나리오 3: 루프백 흐름 — 심층형 + REVISE
+
+```
+사용자: "SDO/AIA 다중 파장으로 코로나 온도 분포를 분석해줘.
+        목적: 기존 DEM 대비 계산 속도 10배 향상 + 정확도 유지하는 경량 모델 개발.
+        모드: 심층형
+        경로: /home/youn_j/projects/dem-fast/_workspace"
+
+Phase 1~3: 정상 진행 (심층형 프리셋)
+
+Phase 4: reviewer
+  → 목적 대비 검증: "속도 10배 향상이 달성되었는가?" → 속도 비교 미계산
+  → "chi-squared 적합도 + 속도 벤치마크 추가 필요"
   → 판정: REVISE
-  → 05_review_report.md: "chi-squared 적합도 평가 추가 필요"
 
 Phase 2: research-designer (2차, 루프백)
-  → 05_review_report.md 피드백 반영
-  → chi-squared 평가 단계 추가
-  → 02_research_design.md 업데이트
+  → 속도 벤치마크 + chi-squared 평가 단계 추가
 
-Phase 3: research-executor (재실행)
-  → chi-squared 계산 추가, Table 1개 추가 생성
-
-Phase 4: reviewer (재검토)
-  → 판정: PASS
+Phase 3~4: 재실행 → PASS
 
 Phase 5~6: 정상 진행
 ```
