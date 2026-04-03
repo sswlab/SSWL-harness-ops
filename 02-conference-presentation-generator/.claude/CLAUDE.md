@@ -29,19 +29,25 @@ content-extractor → story-architect → slide-composer → pptx-engineer → d
                                                       (수정, 최대 2회)  발표 코칭
 ```
 
+## 작업 경로 정책
+
+- **하네스 내 `_workspace/`는 빈 스캐폴드**(디렉토리 구조 템플릿)이다. 실행 결과물을 여기에 저장하지 않는다.
+- 파이프라인 시작 시 사용자에게 **작업 경로를 질문**한다. 사용자가 쿼리에 경로를 명시했으면 그대로 사용한다.
+- 이후 모든 `_workspace/` 참조는 사용자가 지정한 `{작업경로}`로 치환된다.
+
 ## 데이터 전달 규칙
 
 | 에이전트 | 출력 파일 |
 |---|---|
-| content-extractor | `_workspace/01_content_brief.md` |
-| story-architect | `_workspace/02_story_structure.md` |
-| slide-composer | `_workspace/03_slide_deck.md` |
-| pptx-engineer | `_workspace/04_make_ppt.py`, `_workspace/output/*.pptx` |
-| deck-reviewer | `_workspace/05_review_report.md`, `_workspace/06_speaker_guide.md` |
+| content-extractor | `{작업경로}/01_content_brief.md` |
+| story-architect | `{작업경로}/02_story_structure.md` |
+| slide-composer | `{작업경로}/03_slide_deck.md` |
+| pptx-engineer | `{작업경로}/04_make_ppt.py`, `{작업경로}/output/*.pptx` |
+| deck-reviewer | `{작업경로}/05_review_report.md`, `{작업경로}/06_speaker_guide.md` |
 
 **규칙:**
-1. 에이전트 간 데이터는 `_workspace/` 파일로 전달한다
-2. Figure 원본은 `_workspace/figures/`에, 슬라이드 삽입용은 `_workspace/output/`에 배치
+1. 에이전트 간 데이터는 사용자가 지정한 `{작업경로}` 하위 파일로 전달한다
+2. Figure 원본은 `{작업경로}/figures/`에, 슬라이드 삽입용은 `{작업경로}/output/`에 배치
 3. 모든 중간 산출물을 보존한다
 
 ## 기술 스택

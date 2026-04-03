@@ -30,24 +30,30 @@ literature-reviewer  →  research-designer  →  research-executor  →  review
                                                    (루프백, 최대 2회)
 ```
 
+## 작업 경로 정책
+
+- **하네스 내 `_workspace/`는 빈 스캐폴드**(디렉토리 구조 템플릿)이다. 실행 결과물을 여기에 저장하지 않는다.
+- 파이프라인 시작 시 사용자에게 **작업 경로를 질문**한다. 사용자가 쿼리에 경로를 명시했으면 그대로 사용한다.
+- 이후 모든 `_workspace/` 참조는 사용자가 지정한 `{작업경로}`로 치환된다.
+
 ## 데이터 전달 규칙
 
-에이전트 간 모든 데이터는 `_workspace/` 하위 파일로 전달한다.
+에이전트 간 모든 데이터는 사용자가 지정한 `{작업경로}` 하위 파일로 전달한다.
 
 | 에이전트 | 출력 파일 |
 |---|---|
-| literature-reviewer | `_workspace/01_literature_review.md`, `_workspace/references.bib` |
-| research-designer | `_workspace/02_research_design.md` |
-| research-executor | `_workspace/code/`, `_workspace/figures/`, `_workspace/tables/`, `_workspace/03_execution_log.md` |
-| paper-writer | `_workspace/04_paper_draft.md` |
-| reviewer | `_workspace/05_review_report.md`, `_workspace/06_referee_report.md` |
-| 공통 | `_workspace/research-note.md` (전 과정 생각의 흐름 누적 기록) |
+| literature-reviewer | `{작업경로}/01_literature_review.md`, `{작업경로}/references.bib` |
+| research-designer | `{작업경로}/02_research_design.md` |
+| research-executor | `{작업경로}/code/`, `{작업경로}/figures/`, `{작업경로}/tables/`, `{작업경로}/03_execution_log.md` |
+| paper-writer | `{작업경로}/04_paper_draft.md` |
+| reviewer | `{작업경로}/05_review_report.md`, `{작업경로}/06_referee_report.md` |
+| 공통 | `{작업경로}/research-note.md` (전 과정 생각의 흐름 누적 기록) |
 
 **전달 규칙:**
 1. 각 에이전트는 자신의 지정 파일에만 쓴다
 2. 다른 에이전트의 출력은 읽기 전용으로 참조한다
 3. 모든 중간 산출물은 삭제하지 않고 보존한다
-4. `_workspace/research-note.md`에 모든 에이전트가 자기 판단 과정을 누적 기록한다
+4. `{작업경로}/research-note.md`에 모든 에이전트가 자기 판단 과정을 누적 기록한다
 
 ## 기술 스택
 

@@ -20,6 +20,21 @@ description: >
 
 ---
 
+## 작업 경로 설정
+
+**하네스 디렉토리의 `_workspace/`는 빈 스캐폴드(디렉토리 구조 템플릿)이다. 실행 결과물은 사용자가 지정한 외부 경로에 저장한다.**
+
+1. 사용자가 쿼리에 출력 경로를 명시한 경우 → 해당 경로를 `{작업경로}`로 사용
+2. 사용자가 출력 경로를 명시하지 않은 경우 → **반드시 경로를 질문한다**:
+   ```
+   📂 결과물을 저장할 작업 경로를 알려주세요.
+   예: /home/youn_j/projects/apj-paper/_workspace
+   ```
+3. 경로가 확정되면 해당 경로에 필요한 하위 디렉토리(`reviews/`, `revision/`, `decision/`, `latex/` 등)를 생성한다
+4. 이후 모든 `_workspace/` 참조는 사용자가 지정한 `{작업경로}`로 치환된다
+
+---
+
 ## 실행 전 안내 메시지
 
 파이프라인 시작 시 사용자에게 다음을 안내한다:
@@ -30,10 +45,11 @@ description: >
 - 연구 결과를 바탕으로 논문 초안을 작성합니다.
 - 가상 피어리뷰(리뷰어 2명 병렬)를 통해 논문 품질을 검증합니다.
 - 최대 3회 리비전을 거쳐 논문을 완성합니다.
-- 모든 과정은 _workspace/editorial-log.md에 기록됩니다.
+- 모든 과정은 {작업경로}/editorial-log.md에 기록됩니다.
 
 입력 자료: {사용자 제공 자료 목록}
 대상 저널: {확정 또는 "연구자가 제안 예정"}
+작업 경로: {작업경로}
 
 파이프라인을 시작할까요?
 ```
@@ -134,7 +150,7 @@ description: >
 | 5 | researcher | `decision/round{N}_decision.md`, 리뷰 리포트들 | `revision/round{N}_revised_paper.md`, `revision/round{N}_response_to_reviewers.md` |
 | 6 | latex-compiler | 해당 라운드 논문 (.md), `LaTeX-templet/` | `latex/{journal_name}/round{N}/paper.tex`, `latex/{journal_name}/round{N}/paper.pdf` |
 
-**모든 파일은 `_workspace/` 하위에 위치한다.**
+**모든 파일은 사용자가 지정한 `{작업경로}` 하위에 위치한다.**
 
 ---
 
@@ -250,7 +266,7 @@ description: >
 
 ## editorial-log.md 기록 규칙
 
-모든 에이전트는 `_workspace/editorial-log.md`에 자신의 판단 과정을 누적 기록한다.
+모든 에이전트는 `{작업경로}/editorial-log.md`에 자신의 판단 과정을 누적 기록한다.
 
 ```markdown
 # Editorial Log

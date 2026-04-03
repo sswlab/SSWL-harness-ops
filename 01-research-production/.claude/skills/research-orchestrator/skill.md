@@ -18,6 +18,21 @@ description: >
 
 ---
 
+## 작업 경로 설정
+
+**하네스 디렉토리의 `_workspace/`는 빈 스캐폴드(디렉토리 구조 템플릿)이다. 실행 결과물은 사용자가 지정한 외부 경로에 저장한다.**
+
+1. 사용자가 쿼리에 출력 경로를 명시한 경우 → 해당 경로를 `{작업경로}`로 사용
+2. 사용자가 출력 경로를 명시하지 않은 경우 → **반드시 경로를 질문한다**:
+   ```
+   📂 결과물을 저장할 작업 경로를 알려주세요.
+   예: /home/youn_j/projects/flare-prediction/_workspace
+   ```
+3. 경로가 확정되면 해당 경로에 필요한 하위 디렉토리(`code/`, `figures/`, `tables/` 등)를 생성한다
+4. 이후 모든 `_workspace/` 참조는 사용자가 지정한 `{작업경로}`로 치환된다
+
+---
+
 ## 실행 전 안내 메시지
 
 파이프라인 시작 시 사용자에게 다음을 안내한다:
@@ -27,10 +42,11 @@ description: >
 
 • 무제한의 시간을 들여 꼼꼼하게 진행합니다.
 • 1M 토큰을 최대한 활용하여 깊이 있는 연구를 수행합니다.
-• 모든 생각의 흐름은 _workspace/research-note.md에 누적 기록됩니다.
+• 모든 생각의 흐름은 {작업경로}/research-note.md에 누적 기록됩니다.
 • 각 단계 완료 시 진행 상황을 보고합니다.
 
 연구 주제: "{사용자 제시 주제}"
+작업 경로: "{작업경로}"
 
 파이프라인을 시작할까요?
 ```
@@ -116,7 +132,7 @@ description: >
 | 5 | paper-writer | `01~03` 전부, `figures/`, `tables/`, `references.bib` | `04_paper_draft.md` |
 | 6 | reviewer (심사) | `04_paper_draft.md`, `03_execution_log.md`, `figures/`, `tables/` | `06_referee_report.md` |
 
-**모든 파일은 `_workspace/` 하위에 위치한다.**
+**모든 파일은 사용자가 지정한 `{작업경로}` 하위에 위치한다.**
 
 ---
 
@@ -149,7 +165,7 @@ description: >
 
 ## research-note.md 기록 규칙
 
-모든 에이전트는 `_workspace/research-note.md`에 자신의 판단 과정을 누적 기록한다.
+모든 에이전트는 `{작업경로}/research-note.md`에 자신의 판단 과정을 누적 기록한다.
 
 ```markdown
 # Research Note

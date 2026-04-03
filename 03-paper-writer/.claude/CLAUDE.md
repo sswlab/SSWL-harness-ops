@@ -70,22 +70,28 @@ Round 3: researcher → editor → reviewer-1,2(병렬) → editor → 판정
                                                              └→ 미해결 → 사용자에게 반환
 ```
 
+## 작업 경로 정책
+
+- **하네스 내 `_workspace/`는 빈 스캐폴드**(디렉토리 구조 템플릿)이다. 실행 결과물을 여기에 저장하지 않는다.
+- 파이프라인 시작 시 사용자에게 **작업 경로를 질문**한다. 사용자가 쿼리에 경로를 명시했으면 그대로 사용한다.
+- 이후 모든 `_workspace/` 참조는 사용자가 지정한 `{작업경로}`로 치환된다.
+
 ## 데이터 전달 규칙
 
 | 에이전트 | 출력 파일 |
 |---|---|
-| researcher | `_workspace/01_paper_draft.md`, `_workspace/02_cover_letter.md`, `_workspace/revision/round{N}_revised_paper.md`, `_workspace/revision/round{N}_response_to_reviewers.md` |
-| editor | `_workspace/03_editorial_decision.md`, `_workspace/04_reviewer_assignment.md`, `_workspace/decision/round{N}_decision.md` |
-| reviewer-1 | `_workspace/reviews/round{N}_reviewer1_report.md` |
-| reviewer-2 | `_workspace/reviews/round{N}_reviewer2_report.md` |
-| latex-compiler | `_workspace/latex/{journal_name}/round{N}/paper.tex`, `_workspace/latex/{journal_name}/round{N}/paper.pdf` |
-| 공통 | `_workspace/editorial-log.md` (전 과정 진행 기록 누적) |
+| researcher | `{작업경로}/01_paper_draft.md`, `{작업경로}/02_cover_letter.md`, `{작업경로}/revision/round{N}_revised_paper.md`, `{작업경로}/revision/round{N}_response_to_reviewers.md` |
+| editor | `{작업경로}/03_editorial_decision.md`, `{작업경로}/04_reviewer_assignment.md`, `{작업경로}/decision/round{N}_decision.md` |
+| reviewer-1 | `{작업경로}/reviews/round{N}_reviewer1_report.md` |
+| reviewer-2 | `{작업경로}/reviews/round{N}_reviewer2_report.md` |
+| latex-compiler | `{작업경로}/latex/{journal_name}/round{N}/paper.tex`, `{작업경로}/latex/{journal_name}/round{N}/paper.pdf` |
+| 공통 | `{작업경로}/editorial-log.md` (전 과정 진행 기록 누적) |
 
 **전달 규칙:**
 1. 각 에이전트는 자신의 지정 파일에만 쓴다
 2. 다른 에이전트의 출력은 읽기 전용으로 참조한다
 3. 모든 중간 산출물(매 라운드)은 삭제하지 않고 보존한다. LaTeX도 라운드별 별도 디렉토리(`round0`, `round1`, ...)에 저장한다
-4. `_workspace/editorial-log.md`에 모든 에이전트가 판단 과정을 누적 기록한다
+4. `{작업경로}/editorial-log.md`에 모든 에이전트가 판단 과정을 누적 기록한다
 
 ## 입력 소스
 
