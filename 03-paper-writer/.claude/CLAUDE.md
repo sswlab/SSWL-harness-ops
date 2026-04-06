@@ -121,11 +121,21 @@ Round 3: researcher → editor → reviewer-1,2(병렬) → editor → 판정
 |---|---|
 | 언어 | Python 3.10+ |
 | 논문 작성 | Markdown (.md) |
-| 논문 변환 | LaTeX (pdflatex + bibtex) |
+| 논문 변환 | LaTeX (tectonic 또는 pdflatex + bibtex) |
 | 템플릿 | AASTeX v7, aa.cls, mnras.cls, arXiv |
 | 시각화 | matplotlib (DPI=300) |
 | 태양물리 | sunpy, astropy (필요 시) |
 | 참고문헌 | BibTeX, ADS 검색 |
+
+### LaTeX 컴파일 환경
+
+시스템에 `pdflatex`가 없거나 conda 환경의 texlive-core가 불완전한 경우,
+프로젝트 내 conda 환경에 설치된 **tectonic**을 사용한다.
+
+- **환경 경로**: `_texlive/` (conda 환경, `conda create -p ./_texlive -c conda-forge tectonic`)
+- **컴파일 명령**: `conda run -p /path/to/03-paper-writer/_texlive tectonic paper.tex`
+- **장점**: sudo 불필요, 필요한 패키지 자동 다운로드, 단일 명령으로 .tex → .pdf 변환
+- **폴백**: 시스템에 `pdflatex`가 있으면 `pdflatex + bibtex` 3-pass 사용
 
 ## 사용 언어
 
