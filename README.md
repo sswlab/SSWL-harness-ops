@@ -33,6 +33,12 @@ SSWL-harness-ops/
 │       ├── agents/  (4개)
 │       └── skills/  (4개)
 │
+├── 05-symbolic-regression/            ← Symbolic Regression 연구 하네스
+│   └── .claude/
+│       ├── CLAUDE.md
+│       ├── agents/  (4개)
+│       └── skills/  (3개)
+│
 ├── docs/                              # 프로젝트 참고 문서
 └── PPT/                               # 팜플렛/발표 자료
 ```
@@ -127,6 +133,30 @@ claude
 > "GOES XRS 데이터를 이용한 태양 플레어 전구체 패턴 분석 연구를 해줘"
 ```
 
+### 05-symbolic-regression — Symbolic Regression 연구
+
+```bash
+cd /home/youn_j/SSWL-harness-ops/05-symbolic-regression
+claude
+```
+
+데이터와 연구 질문을 입력하면 **데이터 진단 → 도구 라우팅 → 다중 SR 도구 병렬 실행 → SymPy 후처리 → Pareto/LaTeX 보고**까지 수행합니다. PySR을 디폴트로 두고, 데이터 형태와 단위 정보 유무에 따라 PySINDy(시계열), AI Feynman(단위 정보 보유), NeSymReS·KAN·DSO(비교군) 등을 자동 라우팅합니다.
+
+| 에이전트 | 역할 |
+|---|---|
+| sr-planner | 데이터 진단, 도구 라우팅, 실행 계획, 사용자 승인 |
+| sr-executor | 선택 도구(PySR/DSO/NeSymReS/KAN/Feynman/SINDy/DEAP) 병렬 실행 |
+| expression-analyst | SymPy 단순화, 동등성 클러스터링, Pareto front, 차원 분석 |
+| sr-reporter | Figure(Pareto/fit/residual), LaTeX 수식, 한국어 해석 보고서 |
+
+```
+> "data/measurement.csv 의 y와 x1, x2 사이 관계를 찾아줘"
+> "이 시계열 데이터에서 ODE를 발견해줘"
+> "단위가 있는 물리 데이터로 경험식을 찾아줘 (AI Feynman 활용)"
+```
+
+설치는 `cd 05-symbolic-regression && bash install.sh` (PyPI는 requirements.txt, GitHub 기반 도구는 자동 clone).
+
 산출물은 모두 `_workspace/` 하위에 생성됩니다:
 
 ```
@@ -156,4 +186,5 @@ pip install sunpy astropy aiapy drms pandas numpy scipy matplotlib scikit-learn
 - 연구 생산 하네스: `01-research-production/.claude/CLAUDE.md`
 - 학회 발표 PPT 하네스: `02-conference-presentation-generator/.claude/CLAUDE.md`
 - 논문 작성 하네스: `03-paper-writer/.claude/CLAUDE.md`
+- Symbolic Regression 하네스: `05-symbolic-regression/.claude/CLAUDE.md`
 - 프로젝트 시나리오: `docs/scenarios.md`
