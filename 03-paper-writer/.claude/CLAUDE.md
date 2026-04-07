@@ -9,6 +9,7 @@
 | 에이전트 | 역할 | 설명 |
 |---|---|---|
 | **researcher** | 논문 작성자 | 연구 결과를 정리하여 논문 초안 + 커버레터 작성, 리비전 수행 |
+| **co-worker** | 내부 검토자 | researcher 초안을 한 문장씩 검토: 논리적 흐름, 용어 통일성, 팩트체크, 내부 용어 차단. 교정된 원고를 editor에게 전달 |
 | **editor** | 에디터 | 논문 접수, 저널 확인, 참고문헌 최소 20개 확인, 리뷰어 배정(전문분야/성격), 리뷰 취합, 판정 |
 | **reviewer-1** | 리뷰어 1 | 한줄씩 팩트체크, 에디터가 부여한 전문분야 중심 리뷰 |
 | **reviewer-2** | 리뷰어 2 | 한줄씩 팩트체크, reviewer-1과 다른 전문분야 중심 리뷰 (병렬) |
@@ -22,52 +23,66 @@
 [researcher] 논문 초안 + 커버레터 + Figure/Table/코드 제출
     │
     ▼
-[LaTeX 변환] .md → .tex + .pdf (round0) ← 매 라운드마다 별도 저장
+[co-worker] 한 문장씩 검토
+ ├─ 논리적 흐름 & 섹션 간 유기적 연결 확인
+ ├─ 용어 통일성 검증 (같은 개념에 다른 표현 사용 여부)
+ ├─ 팩트체크 (수치·주장을 코드/데이터와 대조)
+ └─ 내부 용어 차단 (버전 코드, 내부 목표 등 유입 여부)
     │
-    ▼
-[editor] 논문 접수 → 저널 확인 → 리뷰어 전문분야 정의 → 리뷰어 성격 부여
+    ├─ 이슈 발견 → researcher에게 검토 리포트 전달 → researcher 수정 후 재제출
     │
-    ├──────────────────┐
-    ▼                  ▼
-[reviewer-1]       [reviewer-2]       ← 병렬 진행
- 한줄씩 팩트체크    한줄씩 팩트체크
- 전문분야 중심      전문분야 중심
- 오류지적/질문      오류지적/질문
-    │                  │
-    └──────┬───────────┘
-           ▼
-        [editor] 리뷰 취합 → 연구자에게 전달
+    └─ 이슈 없음 → 교정 완료 원고 생성
            │
            ▼
-        [researcher] 리비전 수행 → 수정된 논문 + 리뷰 응답 제출
+        [LaTeX 변환] .md → .tex + .pdf (round0) ← 매 라운드마다 별도 저장
            │
            ▼
-        [LaTeX 변환] .md → .tex + .pdf (round{N}) ← 라운드별 별도 저장
-           │
-           ▼
-        [editor] 리비전 확인 → 리뷰어에게 재심 요청
+        [editor] 논문 접수 → 저널 확인 → 리뷰어 전문분야 정의 → 리뷰어 성격 부여
            │
            ├──────────────────┐
            ▼                  ▼
-        [reviewer-1]       [reviewer-2]    ← 재심 (병렬)
+        [reviewer-1]       [reviewer-2]       ← 병렬 진행
+         한줄씩 팩트체크    한줄씩 팩트체크
+         전문분야 중심      전문분야 중심
+         오류지적/질문      오류지적/질문
            │                  │
            └──────┬───────────┘
                   ▼
-               [editor] 판정
+               [editor] 리뷰 취합 → 연구자에게 전달
                   │
-                  ├─── Accept → 최종 논문(.md + .tex + .pdf) + 커버레터 출력
+                  ▼
+               [researcher] 리비전 수행 → 수정된 논문 + 리뷰 응답 제출
                   │
-                  └─── 미해결 (최대 3회 리비전 후) → 사용자에게 리뷰 내용 포함 전달
+                  ▼
+               [co-worker] 리비전 원고 재검토 (흐름/용어/팩트/내부용어)
+                  │
+                  ▼
+               [LaTeX 변환] .md → .tex + .pdf (round{N}) ← 라운드별 별도 저장
+                  │
+                  ▼
+               [editor] 리비전 확인 → 리뷰어에게 재심 요청
+                  │
+                  ├──────────────────┐
+                  ▼                  ▼
+               [reviewer-1]       [reviewer-2]    ← 재심 (병렬)
+                  │                  │
+                  └──────┬───────────┘
+                         ▼
+                      [editor] 판정
+                         │
+                         ├─── Accept → 최종 논문(.md + .tex + .pdf) + 커버레터 출력
+                         │
+                         └─── 미해결 (최대 3회 리비전 후) → 사용자에게 리뷰 내용 포함 전달
 ```
 
 ## 루프 요약: 최대 3회 반복
 
 ```
-Round 1: researcher → editor → reviewer-1,2(병렬) → editor → researcher
-Round 2: researcher → editor → reviewer-1,2(병렬) → editor → researcher
-Round 3: researcher → editor → reviewer-1,2(병렬) → editor → 판정
-                                                             ├→ Accept
-                                                             └→ 미해결 → 사용자에게 반환
+Round 1: researcher → co-worker → editor → reviewer-1,2(병렬) → editor → researcher
+Round 2: researcher → co-worker → editor → reviewer-1,2(병렬) → editor → researcher
+Round 3: researcher → co-worker → editor → reviewer-1,2(병렬) → editor → 판정
+                                                                        ├→ Accept
+                                                                        └→ 미해결 → 사용자에게 반환
 ```
 
 ## 작업 경로 정책
@@ -81,6 +96,7 @@ Round 3: researcher → editor → reviewer-1,2(병렬) → editor → 판정
 | 에이전트 | 출력 파일 |
 |---|---|
 | researcher | `{작업경로}/01_paper_draft.md`, `{작업경로}/02_cover_letter.md`, `{작업경로}/revision/round{N}_revised_paper.md`, `{작업경로}/revision/round{N}_response_to_reviewers.md` |
+| co-worker | `{작업경로}/cowork/round{N}_coworker_report.md`, `{작업경로}/cowork/round{N}_polished_draft.md` |
 | editor | `{작업경로}/03_editorial_decision.md`, `{작업경로}/04_reviewer_assignment.md`, `{작업경로}/decision/round{N}_decision.md` |
 | reviewer-1 | `{작업경로}/reviews/round{N}_reviewer1_report.md` |
 | reviewer-2 | `{작업경로}/reviews/round{N}_reviewer2_report.md` |
@@ -98,6 +114,39 @@ Round 3: researcher → editor → reviewer-1,2(병렬) → editor → 판정
 - `01-research-production/_workspace/` 의 연구 산출물 (논문 초안, Figure, Table, 코드)
 - 사용자 직접 제공 파일 (연구 코드, 데이터, Figure 이미지)
 - 자연어 요청 ("이 연구 결과로 논문 써줘", "ApJ에 투고할 논문 만들어줘")
+
+## 내부 용어 차단 정책 (Internal Terminology Firewall)
+
+01-research-production 등 내부 파이프라인의 연구 산출물을 입력으로 받을 때, **내부 용어가 논문에 유입되지 않도록** 모든 에이전트가 필터링한다. 논문은 외부 독자가 읽는 공식 문서이므로, 연구 과정의 내부 관리 용어는 일절 포함되어서는 안 된다.
+
+### 차단 대상
+
+| 유형 | 예시 | 논문에서의 처리 |
+|---|---|---|
+| **내부 버전 코드** | V1, V2, ..., V7, "version 6", "v6 모델" | 삭제 또는 "the proposed method/model" 등 학술 표현으로 대체 |
+| **내부 목표/타겟** | "target R²=0.85", "목표 정확도 90%", "X를 목표했으나 Y 달성" | **삭제**. 달성된 결과만 baseline 대비 개선으로 positive 보고 |
+| **하네스/파이프라인 용어** | "Phase 1~5", "연구 모드: 심층형", "research-executor", "literature-reviewer", "paper-writer" | 삭제 |
+| **내부 코드네임/약칭** | 프로젝트 내부 약칭, 태스크 ID, 실험 코드명 | 삭제 |
+| **내부 파일 참조** | "research-note.md에 따르면", "todo.md 기준", "execution_log", "02_research_design.md" | 삭제 |
+| **실패한 실험 세부사항** | "V5에서는 temporal split 실패", 버린 ablation 결과 | 논문 contribution에 기여하지 않으면 삭제 |
+| **내부 회의/의사결정 과정** | "사용자가 X를 요청", "에디터 판정에 따라", "리뷰어 피드백 반영" (하네스 내부 리뷰) | 삭제 |
+
+### 에이전트별 책임
+
+| 에이전트 | 책임 |
+|---|---|
+| **researcher** | 논문 초안 작성 시 입력 자료의 내부 용어를 학술 표현으로 변환. 내부 버전 대신 방법론/모델 명칭 사용. 내부 목표 미달 서술 금지 |
+| **co-worker** | **1차 방어선**. 한 문장씩 검토하며 내부 용어 잔존 여부를 점검. 발견 시 검토 리포트에 "Internal Terminology Leak" 항목으로 기록하고 researcher에게 수정 요구 |
+| **editor** | **2차 방어선**. 논문 접수 시 내부 용어 잔존 여부를 체크리스트로 확인. 위 차단 대상 7개 유형을 점검하고, 발견 시 researcher에게 수정 요구 후 리뷰어에게 배정 |
+| **reviewer-1/2** | **3차 방어선**. 리뷰 시 내부 용어가 남아있으면 "Internal Terminology Leak" 항목으로 지적 |
+
+### 변환 원칙
+
+1. **내부 버전 → 방법론 설명**: "V7 모델" → "the BiLSTM-based sequence-to-sequence model" 또는 "the proposed model"
+2. **내부 목표 → 생략**: 미달 target은 일절 언급하지 않음. 달성된 결과를 baseline 대비 개선으로 보고
+3. **프로세스 용어 → 학술 표현**: "Phase 3 실행 결과" → "Experimental results", "Phase 1 문헌조사" → 삭제 (논문에서는 자연스러운 서술로)
+4. **내부 파일 참조 → 삭제**: 내부 문서명(research-note.md, todo.md, execution_log 등)은 논문에 등장하지 않음
+5. **실패 이력 → 선별적 보고**: 최종 채택된 방법론과 그 성능만 보고. 탈락한 approach는 contribution에 기여할 때만 간략히 언급
 
 ## 논문 작성 형식
 
@@ -158,3 +207,4 @@ Round 3: researcher → editor → reviewer-1,2(병렬) → editor → 판정
 9. **템플릿 폴백**: 저널 템플릿 미보유 시 arXiv 형식으로 자동 전환
 10. **결과 투명성**: 성공이든 실패든, 과정과 결과를 명확히 보고
 11. **참고문헌 최소 20개**: 에디터는 논문 접수 시 참고문헌이 최소 20개 이상인지 확인한다. 미달 시 researcher에게 보충을 요구한 후 리뷰어에게 배정한다
+12. **내부 용어 차단**: 내부 버전 코드(V1~V7), 내부 목표/타겟, 하네스 파이프라인 용어, 내부 파일명 등은 논문에 포함되지 않는다. 에디터가 접수 시 점검하고, 리뷰어도 잔존 여부를 확인한다. 상세 규칙은 "내부 용어 차단 정책" 섹션 참조

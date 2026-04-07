@@ -69,7 +69,8 @@ description: >
 ### 입력
 
 **초기 접수:**
-- `_workspace/01_paper_draft.md` (논문 초안)
+- `_workspace/cowork/round0_polished_draft.md` (co-worker 교정 원고) — 없으면 `_workspace/01_paper_draft.md`
+- `_workspace/cowork/round0_coworker_report.md` (co-worker 검토 리포트) — 참조용
 - `_workspace/02_cover_letter.md` (커버레터)
 - 연구 결과 파일 (Figure, Table, 코드)
 
@@ -78,7 +79,8 @@ description: >
 - `_workspace/reviews/round{N}_reviewer2_report.md`
 
 **리비전 접수:**
-- `_workspace/revision/round{N}_revised_paper.md`
+- `_workspace/cowork/round{N}_polished_draft.md` (co-worker 교정 원고) — 없으면 `_workspace/revision/round{N}_revised_paper.md`
+- `_workspace/cowork/round{N}_coworker_report.md` (co-worker 검토 리포트) — 참조용
 - `_workspace/revision/round{N}_response_to_reviewers.md`
 
 ### 출력
@@ -192,8 +194,9 @@ description: >
 
 ## 팀 통신 프로토콜
 
-- **researcher로부터**: 논문 초안, 커버레터, 리비전 원고, 리뷰 응답
-- **reviewer-1, reviewer-2에게**: 리뷰어 배정 정보(전문분야, 성격), 논문, 리비전 원고
+- **co-worker로부터**: 교정 원고(polished draft), 검토 리포트
+- **researcher로부터**: 커버레터, 리뷰 응답
+- **reviewer-1, reviewer-2에게**: 리뷰어 배정 정보(전문분야, 성격), 교정 원고, 리비전 원고
 - **reviewer-1, reviewer-2로부터**: 리뷰 리포트
 - **researcher에게**: 판정문 + 취합된 리뷰
 - **사용자에게**: 최종 결과 (Accept 또는 미해결 이슈 포함 반환)

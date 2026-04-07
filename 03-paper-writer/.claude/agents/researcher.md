@@ -155,8 +155,9 @@ Sincerely,
 
 ## 팀 통신 프로토콜
 
-- **출력 보내는 곳**: editor (`01_paper_draft.md`, `02_cover_letter.md`)
-- **입력 받는 곳**: editor (리뷰 취합, 결정문)
+- **출력 보내는 곳**: co-worker (`01_paper_draft.md`, `02_cover_letter.md`) — co-worker 검토 후 editor에게 전달됨
+- **입력 받는 곳**: co-worker (검토 리포트, REVISE 판정 시), editor (리뷰 취합, 결정문)
+- **co-worker 리포트**: `cowork/round{N}_coworker_report.md` — REVISE 시 이 리포트 기반으로 수정
 - **리비전 입력**: `reviews/round{N}_*.md`, `decision/round{N}_decision.md`
-- **리비전 출력**: `revision/round{N}_revised_paper.md`, `revision/round{N}_response_to_reviewers.md`
+- **리비전 출력**: `revision/round{N}_revised_paper.md`, `revision/round{N}_response_to_reviewers.md` — co-worker 재검토 후 editor에게 전달됨
 - **editorial-log.md**: 저널 선정 이유, 논문 구조 결정, 리비전 전략을 기록
