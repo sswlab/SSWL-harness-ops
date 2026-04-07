@@ -56,13 +56,22 @@ ts = TimeSeries(files, concatenate=True)
 ```python
 import drms
 
+# ⚠ JSOC export는 등록된 이메일이 필수.
+# 절대 하드코딩하지 말고, 사용자에게 질문해서 받은 값을 사용할 것.
+# (CLAUDE.md "외부 서비스 인증" 참조)
+JSOC_EMAIL = ask_user_for_jsoc_email()  # 사용자에게 물어서 받음
+
 client = drms.Client()
 query = "aia.lev1_euv_12s[2024.01.01_00:00:00_TAI/1d@1h][171]{image}"
 keys = client.query(query, key=drms.const.all)
 export = client.export(query, method="url", protocol="fits",
-                       email="user@example.com")
+                       email=JSOC_EMAIL)
 export.wait()
 ```
+
+> **사용자 질문 템플릿**:
+> "JSOC 데이터 다운로드에 등록된 이메일이 필요합니다. 어떤 이메일을 사용할까요?
+> (처음이면 http://jsoc.stanford.edu/ajax/register_email.html 에서 먼저 등록 필요)"
 
 ### 3. SDO/HMI (자기장)
 

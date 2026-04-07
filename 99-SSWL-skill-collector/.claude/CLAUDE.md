@@ -97,3 +97,50 @@ _workspace/
 4. **의도 확인**: 코드의 목적이 불분명하면 사용자에게 질문한다
 5. **기존 스킬 존중**: 변환 결과가 기존 하네스 스킬과 충돌하지 않도록 확인
 6. **실용성 우선**: 모든 코드를 스킬로 만들 필요 없다. 재사용 가치가 낮은 코드는 "아카이브"로 분류
+7. **자격증명/이메일 분리**: 아래 "외부 서비스 자격증명 처리" 절 참조
+
+## 외부 서비스 자격증명 처리
+
+연구실 코드에는 종종 **외부 서비스에 등록된 이메일이나 API 키**가 하드코딩되어 있다.
+스킬로 변환할 때는 이런 값을 **반드시 분리**해야 한다.
+
+### JSOC/SDO drms 코드를 발견하면
+
+원본 코드:
+```python
+import drms
+client = drms.Client()
+export = client.export(query, method="url", protocol="fits",
+                       email="someone@university.edu")  # ← 하드코딩
+```
+
+스킬로 변환할 때:
+- ❌ 원본의 이메일을 그대로 둔 채 패키징하지 말 것 (다른 사용자에게 발송 추적이 잘못 부과됨)
+- ❌ `email="user@example.com"` 같은 더미값으로 대체하지 말 것 (런타임 에러)
+- ✅ **스킬이 사용자에게 이메일을 묻도록 설계**:
+  ```python
+  def fetch_aia(query: str, email: str | None = None):
+      if not email:
+          raise ValueError(
+              "JSOC export에는 등록된 이메일이 필요합니다. "
+              "email 인수를 제공하거나 환경변수 JSOC_EMAIL을 설정하세요. "
+              "등록: http://jsoc.stanford.edu/ajax/register_email.html"
+          )
+      ...
+  ```
+- ✅ **skill.md의 description에 명시**: "JSOC 등록 이메일이 필요한 작업"임을 트리거 키워드와 함께 기록
+- ✅ **사용 예시에 사용자 질문 단계 포함**:
+  > 1. 사용자에게 JSOC 등록 이메일을 묻는다
+  > 2. (선택) 환경변수 `JSOC_EMAIL` 확인 → 있으면 그것 사용
+  > 3. 둘 다 없으면 명확한 에러 메시지로 안내
+
+### 다른 자격증명도 마찬가지
+
+| 패턴 | 처리 |
+|---|---|
+| `email="..."`, `EMAIL = "..."` | 함수 인자 또는 환경변수로 분리 |
+| `api_key="..."`, `TOKEN = "..."` | 환경변수 (`os.environ["XXX_API_KEY"]`) |
+| `password="..."`, `passwd = "..."` | 환경변수 + 사용자 안내 |
+| 학교 LDAP, KASI 내부 서버 자격 | 별도 설정 파일, .env, 키링 사용 |
+
+**원칙**: 스킬은 **다음 사용자**가 받았을 때 자기 자격증명을 입력하여 동작해야 한다. 원본 작성자의 자격증명이 leak되면 안 된다.

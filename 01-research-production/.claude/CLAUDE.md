@@ -100,3 +100,26 @@ literature-reviewer  →  research-designer  →  research-executor  →  review
 4. **품질 게이트**: reviewer가 PASS 판정해야 다음 단계로 진행. reviewer는 목적 달성 여부도 판정
 5. **생각의 흐름 기록**: 모든 판단 과정을 research-note.md에 누적
 6. **재현성**: 코드, 데이터 경로, 파라미터를 명시하여 제3자가 재현 가능
+7. **외부 서비스 자격증명은 사용자에게 묻기**: 아래 "외부 서비스 인증" 절 참조
+
+## 외부 서비스 인증
+
+### JSOC/SDO 데이터 다운로드 — 이메일 필수
+
+`drms.Client.export()` 호출에는 **JSOC에 등록된 이메일 주소가 반드시 필요**하다.
+이는 JSOC export 큐 추적용이며, 사전에 [http://jsoc.stanford.edu/ajax/register_email.html](http://jsoc.stanford.edu/ajax/register_email.html) 에서 등록해야 사용 가능하다.
+
+**규칙:**
+- ❌ **절대 하드코딩 금지** — `email="user@example.com"`, `email="test@test.com"` 같은 더미값 금지
+- ❌ **임의 추측 금지** — 사용자 메시지나 메모리에서 본 이메일을 멋대로 사용하지 말 것
+- ✅ **첫 사용 전에 사용자에게 명시적으로 질문**:
+  > "JSOC 데이터 다운로드에 등록된 이메일 주소가 필요합니다. 어떤 이메일을 사용할까요? (예: name@khu.ac.kr)
+  > 처음 사용하는 이메일이라면 [JSOC 등록 페이지](http://jsoc.stanford.edu/ajax/register_email.html)에서 먼저 등록해 주세요."
+- ✅ **세션 내 재사용 가능**: 한 번 받은 이메일은 같은 세션 내에서 재질문 없이 재사용한다 (research-note.md에 기록)
+- ✅ **다른 세션에서는 다시 질문**: 세션이 바뀌면 처음부터 다시 묻는다 (사용자가 바뀔 수 있음)
+
+**적용 대상 도구**: `drms`, `sunpy.net.jsoc.JSOCClient`, 그리고 JSOC을 호출하는 모든 wrapper
+
+### 기타 외부 서비스
+- **NOAA SWPC, VSO, SOAR, STEREO SSC**: 인증 불필요 (공개)
+- **유료/구독 서비스(향후 추가 시)**: 같은 원칙 적용 — 사용자에게 묻고, 하드코딩하지 않는다
