@@ -1,0 +1,15 @@
+# Workspace output directories (scaffolds only in repo)
+_workspace/
+*/_workspace/
+
+# Conda environments
+_texlive/
+*/_texlive/
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# OS
+.DS_Store
