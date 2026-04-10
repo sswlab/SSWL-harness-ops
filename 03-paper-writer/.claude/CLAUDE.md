@@ -91,6 +91,16 @@ Round 3: researcher → co-worker → editor → reviewer-1,2(병렬) → editor
 - 파이프라인 시작 시 사용자에게 **작업 경로를 질문**한다. 사용자가 쿼리에 경로를 명시했으면 그대로 사용한다.
 - 이후 모든 `_workspace/` 참조는 사용자가 지정한 `{작업경로}`로 치환된다.
 
+## 초안 규모 사전 안내
+
+파이프라인 시작 시, researcher 에이전트에 초안 작성을 지시하기 **전에** 사용자에게 다음 정보를 예고한다:
+
+1. **예상 분량**: 대략적인 단어 수 (예: ~8,000 words, ~12,000 words)
+2. **Figure 수**: 입력 자료에서 식별된 Figure 후보 개수와 간략한 목록
+3. **Table 수**: 본문 + Appendix에 들어갈 Table 후보 개수와 간략한 목록
+
+이 예고는 사용자 승인 단계에서 서사 구성과 함께 제시하며, 사용자가 분량이나 Figure/Table 구성을 조정할 수 있도록 한다. researcher 에이전트는 승인된 규모 범위 내에서 초안을 작성한다.
+
 ## 데이터 전달 규칙
 
 | 에이전트 | 출력 파일 |
@@ -114,6 +124,12 @@ Round 3: researcher → co-worker → editor → reviewer-1,2(병렬) → editor
 - `01-research-production/_workspace/` 의 연구 산출물 (논문 초안, Figure, Table, 코드)
 - 사용자 직접 제공 파일 (연구 코드, 데이터, Figure 이미지)
 - 자연어 요청 ("이 연구 결과로 논문 써줘", "ApJ에 투고할 논문 만들어줘")
+
+## 기존 논문 초안 제공 시
+
+사용자가 기존 논문 초안(.tex, .pdf, .md)을 제공하면서 문법 교정, 팩트체크, 모의 피어리뷰, 구조 개선 등을 요청하는 경우, **06-paper-editor 하네스**(`/home/youn_j/SSWL-harness-ops/06-paper-editor/`)를 안내한다. 03-paper-writer는 연구 결과로부터 **새 논문을 작성**하는 하네스이며, 기존 논문의 편집/리뷰는 06-paper-editor의 영역이다.
+
+단, 사용자가 "전체 리라이트"를 요청하는 경우(기존 초안을 바탕으로 처음부터 재작성)에는 03-paper-writer의 기본 파이프라인(researcher → co-worker → editor → reviewer-1/2)을 그대로 사용한다.
 
 ## 내부 용어 차단 정책 (Internal Terminology Firewall)
 
