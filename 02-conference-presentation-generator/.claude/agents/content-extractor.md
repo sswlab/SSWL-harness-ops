@@ -34,11 +34,11 @@ description: >
 ### 입력
 
 다음 중 하나 이상:
-- `01-research-production/_workspace/04_paper_draft.md` (논문 초안)
-- `01-research-production/_workspace/figures/` (Figure 파일들)
-- `01-research-production/_workspace/tables/` (Table 파일들)
-- `01-research-production/_workspace/03_execution_log.md` (실행 로그)
-- 사용자 직접 제공 파일 (논문 PDF 등)
+- 사용자 제공 논문 초안 (.md, .tex, .pdf)
+- 사용자 제공 Figure 파일 (이미지)
+- 사용자 제공 Table 파일
+- 사용자 제공 실험 로그 / 실행 결과
+- 사용자가 지정한 경로의 연구 산출물
 
 ### 출력
 

@@ -38,7 +38,7 @@ description: >
 
 **초기 제출 시:**
 - 사용자 제공 연구 코드, 데이터, Figure, Table
-- `01-research-production/_workspace/` 산출물 (있는 경우)
+- 사용자가 지정한 경로의 연구 산출물
 - 사용자의 연구 요약 또는 기존 논문 초안
 
 **리비전 시:**

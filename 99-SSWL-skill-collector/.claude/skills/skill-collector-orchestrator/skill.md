@@ -333,7 +333,7 @@ Phase 3~5: 정상 진행
 
 ```
 Phase 5: integration-tester
-  → data-fetcher 스킬의 description이 01-research-production의 data-pipeline과 트리거 충돌
+  → data-fetcher 스킬의 description이 기존 변환 스킬 data-pipeline과 트리거 충돌
   → REVISE 판정, description 수정 요청
 
 Phase 4 (2차): skill-builder

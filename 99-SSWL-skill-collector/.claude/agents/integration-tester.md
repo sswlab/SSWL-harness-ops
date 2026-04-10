@@ -18,7 +18,7 @@ description: >
 
 1. **트리거 검증**: should-trigger / should-NOT-trigger 쿼리로 description 정확성 확인
 2. **실행 테스트**: scripts/의 코드가 실행 가능한지, 의존성이 충족되는지 확인
-3. **충돌 확인**: SSWL-harness-ops의 기존 스킬과 트리거/기능 충돌 확인
+3. **충돌 확인**: 이미 변환 완료된 스킬과 트리거/기능 충돌 확인
 4. **skill.md 리뷰**: 구조, 분량, progressive disclosure 적합성 확인
 5. **피드백 보고**: 문제 발견 시 구체적 수정 사항을 skill-builder에 전달
 
@@ -34,7 +34,7 @@ description: >
 ### 입력
 
 - `{작업경로}/skills/` — skill-builder가 생성한 스킬
-- 기존 하네스 스킬 목록
+- 기존 변환 완료 스킬 목록
 
 ### 출력
 

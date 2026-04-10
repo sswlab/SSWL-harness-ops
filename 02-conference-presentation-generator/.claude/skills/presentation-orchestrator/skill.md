@@ -156,8 +156,9 @@ description: >
 ### 시나리오 1: 정상 흐름 — 15분 학회 발표
 
 ```
-사용자: "01-research-production의 태양 플레어 예측 연구 결과로
-        15분 학회 발표 PPT를 만들어줘. AGU 발표, 영어."
+사용자: "태양 플레어 예측 연구 결과로
+        15분 학회 발표 PPT를 만들어줘. AGU 발표, 영어.
+        결과물은 /home/youn_j/research/flare-prediction/ 에 있어."
 
 Phase 1: content-extractor
   → 논문 초안 + Figure 4개 + Table 1개에서 콘텐츠 추출

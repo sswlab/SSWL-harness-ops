@@ -318,10 +318,11 @@ description: >
 ### 시나리오 1: 정상 흐름 — 1회 리비전 후 Accept
 
 ```
-사용자: "01-research-production의 결과로 ApJ 논문 써줘"
+사용자: "태양 플레어 예측 연구 결과로 ApJ 논문 써줘.
+        결과물은 /home/youn_j/research/flare-prediction/ 에 있어."
 
 Phase 1: researcher
-  → 01-research-production/_workspace/ 자료 분석
+  → 사용자 지정 경로의 자료 분석
   → ApJ 스타일 논문 초안 작성
   → 01_paper_draft.md, 02_cover_letter.md 생성
 

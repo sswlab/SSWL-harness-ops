@@ -61,8 +61,8 @@ content-extractor → story-architect → slide-composer → pptx-engineer → d
 
 ## 입력 소스
 
-- `01-research-production/_workspace/` 의 연구 산출물 (논문 초안, Figure, Table)
-- 사용자 직접 제공 파일 (논문 PDF, Figure 이미지)
+- 사용자 직접 제공 파일 (논문 초안, 논문 PDF, Figure 이미지, Table)
+- 사용자가 지정한 경로의 연구 산출물
 - 자연어 요청 ("이 연구 결과로 15분 학회 발표 PPT 만들어줘")
 
 ## 사용 언어
