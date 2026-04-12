@@ -140,6 +140,7 @@ Round 3: researcher → co-worker → editor → reviewer-1,2(병렬) → editor
 | 유형 | 예시 | 논문에서의 처리 |
 |---|---|---|
 | **내부 버전 코드** | V1, V2, ..., V7, "version 6", "v6 모델" | 삭제 또는 "the proposed method/model" 등 학술 표현으로 대체 |
+| **연구 프로덕션/버전 이력** | "V3→V5→V7로 개선", "이전 버전 대비 R² 0.5→0.7→0.8" | **삭제**. 버전 진행 이력은 논문에 포함하지 않음. 성능이 개선된 경우 **최종(최선) 모델만 보고**. 비교가 필요한 경우 model 1/model 2 등 중립적 명칭 사용 |
 | **내부 목표/타겟** | "target R²=0.85", "목표 정확도 90%", "X를 목표했으나 Y 달성" | **삭제**. 달성된 결과만 baseline 대비 개선으로 positive 보고 |
 | **하네스/파이프라인 용어** | "Phase 1~5", "연구 모드: 심층형", "research-executor", "literature-reviewer", "paper-writer" | 삭제 |
 | **내부 코드네임/약칭** | 프로젝트 내부 약칭, 태스크 ID, 실험 코드명 | 삭제 |
@@ -151,7 +152,7 @@ Round 3: researcher → co-worker → editor → reviewer-1,2(병렬) → editor
 
 | 에이전트 | 책임 |
 |---|---|
-| **researcher** | 논문 초안 작성 시 입력 자료의 내부 용어를 학술 표현으로 변환. 내부 버전 대신 방법론/모델 명칭 사용. 내부 목표 미달 서술 금지 |
+| **researcher** | 논문 초안 작성 시 입력 자료의 내부 용어를 학술 표현으로 변환. 내부 버전 대신 방법론/모델 명칭 사용. 내부 목표 미달 서술 금지. **버전 이력(V3→V5→V7 등) 없이 최종 모델만 보고. 비교 시 model 1/model 2 등 중립 명칭 사용** |
 | **co-worker** | **1차 방어선**. 한 문장씩 검토하며 내부 용어 잔존 여부를 점검. 발견 시 검토 리포트에 "Internal Terminology Leak" 항목으로 기록하고 researcher에게 수정 요구 |
 | **editor** | **2차 방어선**. 논문 접수 시 내부 용어 잔존 여부를 체크리스트로 확인. 위 차단 대상 7개 유형을 점검하고, 발견 시 researcher에게 수정 요구 후 리뷰어에게 배정 |
 | **reviewer-1/2** | **3차 방어선**. 리뷰 시 내부 용어가 남아있으면 "Internal Terminology Leak" 항목으로 지적 |
@@ -159,10 +160,12 @@ Round 3: researcher → co-worker → editor → reviewer-1,2(병렬) → editor
 ### 변환 원칙
 
 1. **내부 버전 → 방법론 설명**: "V7 모델" → "the BiLSTM-based sequence-to-sequence model" 또는 "the proposed model"
-2. **내부 목표 → 생략**: 미달 target은 일절 언급하지 않음. 달성된 결과를 baseline 대비 개선으로 보고
-3. **프로세스 용어 → 학술 표현**: "Phase 3 실행 결과" → "Experimental results", "Phase 1 문헌조사" → 삭제 (논문에서는 자연스러운 서술로)
-4. **내부 파일 참조 → 삭제**: 내부 문서명(research-note.md, todo.md, execution_log 등)은 논문에 등장하지 않음
-5. **실패 이력 → 선별적 보고**: 최종 채택된 방법론과 그 성능만 보고. 탈락한 approach는 contribution에 기여할 때만 간략히 언급
+2. **버전 이력 → 최종 모델만 보고**: 여러 버전을 거쳐 성능이 개선된 경우, 중간 과정 없이 **최종(최선) 모델의 결과만** 보고한다. 예: "V3(R²=0.5) → V5(0.7) → V7(0.8)" → "The proposed model achieved R²=0.8"
+3. **모델 비교 → 중립적 명칭**: 두 모델 이상의 비교가 논문에 필요한 경우 내부 버전명 대신 **model 1/model 2**, **Method A/Method B** 등 중립적 라벨을 사용한다. 예: "V5 vs V7" → "Model 1 vs Model 2" 또는 방법론 특성을 반영한 명칭("RF-based model" vs "BiLSTM-based model")
+4. **내부 목표 → 생략**: 미달 target은 일절 언급하지 않음. 달성된 결과를 baseline 대비 개선으로 보고
+5. **프로세스 용어 → 학술 표현**: "Phase 3 실행 결과" → "Experimental results", "Phase 1 문헌조사" → 삭제 (논문에서는 자연스러운 서술로)
+6. **내부 파일 참조 → 삭제**: 내부 문서명(research-note.md, todo.md, execution_log 등)은 논문에 등장하지 않음
+7. **실패 이력 → 선별적 보고**: 최종 채택된 방법론과 그 성능만 보고. 탈락한 approach는 contribution에 기여할 때만 간략히 언급
 
 ## 논문 작성 형식
 

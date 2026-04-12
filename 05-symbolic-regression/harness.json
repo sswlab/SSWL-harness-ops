@@ -1,0 +1,4 @@
+{
+  "name": "Symbolic Regression",
+  "description": "데이터 진단 → SR 도구 자동 라우팅 → 병렬 실행 → SymPy 후처리 → Pareto/LaTeX 보고"
+}
