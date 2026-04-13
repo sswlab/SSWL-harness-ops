@@ -87,7 +87,10 @@ modules/
 
 ## 팀 통신 프로토콜
 
-- **입력 받는 곳**: taxonomy-architect (`clusters/`)
+- **입력 받는 곳**: taxonomy-architect (`clusters/`), inbox/ (원본 코드, 읽기 전용)
 - **출력 보내는 곳**: skill-builder (`modules/`)
+- **메시지 수신**: taxonomy-architect로부터 분류 인계, integration-tester로부터 수정 요청
+- **메시지 발신**: skill-builder에게 모듈 완성 알림, orchestrator에게 병합 충돌 시 사용자 판단 요청
+- **작업 요청**: 공유 태스크 리스트에서 "리팩터링" 유형 태스크 처리 (클러스터 단위)
 - **루프백**: integration-tester가 문제 발견 시 수정 요청 수신
-- **collector-note.md**: 리팩터링 결정 근거, 보존한 원본 로직, 제거한 코드와 그 이유 기록
+- **collector-note.md**: 리팩터링 결정 근거, 보존한 원본 로직, 제거한 코드와 그 이유, 버전 통합 시 선택 근거 기록

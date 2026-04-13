@@ -5,25 +5,30 @@
 
 ## 프로젝트 개요
 
-연구자가 정리되지 않은 코드 덩어리를 `inbox/`에 넣으면,
-에이전트 팀이 코드를 읽고 → 기능별로 묶고 → 리팩터링하고 → 스킬로 패키징한다.
+연구자가 정리되지 않은 코드 덩어리를 `inbox/`에 넣거나,
+**원격 서버의 코드 경로를 지정하면**,
+에이전트 팀이 코드를 수집 → 읽고 → 기능별로 묶고 → 리팩터링하고 → 스킬로 패키징한다.
 최종 산출물은 `.claude/skills/` 형식의 즉시 사용 가능한 스킬이다.
 
 ## 에이전트 팀 구성표
 
 | 에이전트 | 역할 | 핵심 기능 |
 |---|---|---|
-| **code-archaeologist** | 코드 분석 | 원본 코드 읽기, 목적·의존성·I/O 패턴 파악, 인벤토리 생성 |
-| **taxonomy-architect** | 분류 설계 | 기능별 클러스터링, 중복 식별, 분류 체계(taxonomy) 설계 |
+| **remote-collector** | 원격 수집 | SSH 기반 원격 서버 코드 탐색, 버전 계보 분석, 최적 버전 선별, 로컬 전송 |
+| **code-archaeologist** | 코드 분석 | 원본 코드 읽기, 목적·의존성·I/O 패턴 파악, 버전 계보·노트북 ���석, 인벤토리 생성 |
+| **taxonomy-architect** | 분류 설계 | 기능별 클러스터링, 중복 식별, SSWL 도메인 범주 활용, 분류 체계 설계 |
 | **code-refactorer** | 코드 정리 | 중복 병합, 모놀리스 분리, 모듈화, 인터페이스 표준화 |
 | **skill-builder** | 스킬 패키징 | 모듈 → skill.md 변환, description 작성, references 구성 |
-| **integration-tester** | 품질 검증 | 스킬 트리거 검증, 실행 테스트, 기존 스킬과 충돌 확인 |
+| **integration-tester** | 품질 검증 | 스킬 트리거 검증, 실행 테스트, 경계면 교차 검증, 기존 스킬과 충돌 확인 |
 
 ## 실행 모드: 에이전트 팀
 
 **기본 흐름:**
 ```
-코드 덤프 (inbox/)
+원격 서버 / 로컬 코드
+    │
+    ▼
+[remote-collector]  →  코드 덤프 (inbox/)     ← Phase 0 (원격 모드 전용)
     │
     ▼
 code-archaeologist  →  taxonomy-architect  →  [사용자 승인]
@@ -34,6 +39,7 @@ code-refactorer  →  skill-builder  →  integration-tester  →  최종 스킬
 
 **데이터 흐름:**
 ```
+remote-collector    ──(수집 파일+매니페스트)──▶  code-archaeologist  (원격 모드)
 code-archaeologist  ──(인벤토리)──▶  taxonomy-architect
 taxonomy-architect  ──(분류 체계)──▶  code-refactorer
 code-refactorer     ──(모듈)──▶      skill-builder
@@ -49,6 +55,7 @@ integration-tester  ──(피드백)──▶    skill-builder (루프백)
 
 | 에이전트 | 출력 디렉토리 |
 |---|---|
+| remote-collector | `{작업경로}/collection/` |
 | code-archaeologist | `{작업경로}/inventory/` |
 | taxonomy-architect | `{작업경로}/clusters/` |
 | code-refactorer | `{작업경로}/modules/` |
@@ -61,6 +68,7 @@ integration-tester  ──(피드백)──▶    skill-builder (루프백)
 | 스킬 | 역할 |
 |---|---|
 | **skill-collector-orchestrator** | 전체 파이프라인 조율, 에이전트 실행 순서, 루프백, 사용자 승인 |
+| **remote-collection-protocol** | 원격 수집 절차, 버전 선별 표준, SSH 스캔 프로토콜, 전송 절차 |
 | **code-analysis-protocol** | 코드 분석 절차, 인벤토리 작성 표준, 의존성 추출 규칙 |
 | **skill-packaging-guide** | 모듈→스킬 변환 규칙, description 작성법, progressive disclosure |
 
@@ -69,13 +77,15 @@ integration-tester  ──(피드백)──▶    skill-builder (루프백)
 1. **전체 변환**: 코드 덤프 전체를 분석 → 분류 → 스킬화
 2. **추가 수집**: 기존 인벤토리에 새 코드 추가 → 기존 분류에 통합
 3. **단일 변환**: 특정 코드 파일만 지정하여 스킬로 변환
+4. **원격 수집 + 전체 변환**: 원격 서버에서 코드를 수집한 후 전체 분석 → 스킬화
 
 ## 작업 공간
 
 ```
 _workspace/
+├── collection/     # Phase 0: 원격 수집 매니페스트 및 전송 로그 (원격 모드)
 ├── inbox/          # 사용자가 원본 코드를 넣는 곳 (읽기 전용으로 취급)
-├── inventory/      # 코드 인벤토리 (분석 결과)
+├── inventory/      # 코드 인벤토리 (분석 결과, 버전 계보, 노트북 분석)
 ├── clusters/       # 기능별 클러스터링 결과
 ├── modules/        # 리팩터링된 모듈
 ├── skills/         # 패키징된 스킬 초안

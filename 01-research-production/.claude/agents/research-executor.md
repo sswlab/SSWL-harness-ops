@@ -37,22 +37,29 @@ description: >
 
 - `_workspace/02_research_design.md` (연구 설계서)
 - (선택) paper-writer의 추가 Figure/Table 요청
+- (선택) `{이전 작업경로}` — 사용자가 제공한 이전 버전 작업 경로. 크로스-버전 비교에 사용
 
 ### 출력
 
 **`_workspace/code/`**: 실행 코드
 
+코드 파일은 연구 내용에 맞게 자유롭게 구성하되, 아래 **naming convention**을 준수한다.
+
 ```
 _workspace/code/
-├── config.py              # 설정 (경로, 파라미터, 상수)
-├── 01_data_download.py    # 데이터 다운로드
-├── 02_preprocessing.py    # 전처리
-├── 03_baseline.py         # Baseline 실행
-├── 04_experiment.py       # Experiment 실행
-├── 05_analysis.py         # 비교 분석
-├── 06_figures.py          # Figure 생성
-└── utils.py               # 공통 유틸리티
+├── config.py                        # [필수] 설정 (경로, 파라미터, 상수)
+├── utils.py                         # [필수] 공통 유틸리티
+├── {NN}_{동사}_{대상}.py             # 실행 스크립트 (자유 구성)
+└── ...
 ```
+
+### 코드 파일 Naming Convention
+
+- **형식**: `{NN}_{동사}_{대상}.py` (예: `01_download_goes_xrs.py`, `05_train_bilstm.py`)
+- **번호(NN)**: 실행 순서를 나타내는 2자리 정수. 01부터 시작
+- **동사**: 해당 스크립트의 주요 작업 (download, preprocess, build, train, evaluate, plot 등)
+- **config.py, utils.py**: 번호 없이 고정 이름 사용
+- **유연 구성**: 연구 내용에 따라 스크립트 수와 구성은 자유. 고정 6파일 구조를 강제하지 않음
 
 **`_workspace/figures/`**: 생성된 Figure (PNG, DPI=300)
 
@@ -142,6 +149,24 @@ mpl.rcParams.update({
 - 축 레이블: 단위 포함 (예: "Flux [W m⁻²]")
 - 컬러맵: 색맹 친화적 (viridis, cividis 등)
 - 범례: 프레임 없음, 위치는 데이터에 따라 최적화
+
+## 크로스-버전 비교 (이전 버전 제공 시)
+
+사용자가 `{이전 작업경로}`를 제공한 경우, 실험 완료 후 이전 버전과의 비교를 수행한다.
+
+1. **이전 결과 로드**: `{이전 작업경로}/tables/` 또는 `03_execution_log.md`에서 핵심 메트릭(MAE, R², RMSE 등)을 추출
+2. **비교 테이블 생성**: `_workspace/tables/version_comparison.md`에 이전 vs 현재 메트릭 비교표 작성
+3. **변화율 계산**: 각 메트릭의 변화율(%) 명시
+4. **내부 전용 표기**: 이 비교 테이블은 연구자 참고용이며, paper-writer가 논문에 직접 포함하지 않는다. 논문에서는 내부 버전명 없이 방법론 명칭으로 비교한다
+
+```markdown
+# Version Comparison
+
+| Metric | 이전 ({이전 버전명}) | 현재 | 변화 |
+|---|---|---|---|
+| MAE | 0.0210 | 0.0190 | -9.5% |
+| R² | 0.695 | 0.730 | +5.0% |
+```
 
 ## 에러 핸들링
 

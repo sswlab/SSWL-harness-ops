@@ -20,6 +20,31 @@ description: >
 3. **분류 체계 설계**: 스킬 변환을 위한 최적 분류 구조를 제안한다.
 4. **병합/분리 판단**: 어떤 코드를 합치고(merge), 어떤 코드를 분리(split)할지 결정한다.
 5. **아카이브 판별**: 스킬로 만들 가치가 낮은 코드를 "아카이브"로 분류한다.
+6. **수집 범주 검증**: remote-collector가 범주를 사전 할당한 경우, 기능 분석에 기반하여 검증·재조정한다.
+
+## SSWL 도메인 범주 템플릿
+
+태양물리/우주환경 연구실 코드의 전형적 범주. 초기 분류 시 참고한다.
+사용자의 코드가 이 범주에 매핑되지 않으면 새 범주를 생성한다.
+
+| # | 범주 | 설명 | 전형적 코드 패턴 |
+|---|---|---|---|
+| 1 | 전처리 (Preprocessing) | AIA/EUI/HMI 원시 데이터 정제, 캘리브레이션 | `aiapy.calibrate`, `sunpy.map` |
+| 2 | 데이터 수집 (Data Download) | JSOC, VSO, SOAR 등 데이터 다운로드 | `drms`, `Fido`, `requests` |
+| 3 | DL Pix2Pix | Pix2Pix GAN 기반 EUV 이미지 변환 | `torch.nn`, Generator/Discriminator |
+| 4 | DL Aurora | 오로라 예보/분류 딥러닝 모델 | `torchvision.models`, ResNeXt |
+| 5 | DEM | 차등방출도(Differential Emission Measure) 분석 | `demregpy`, `dn2dem_pos` |
+| 6 | DEM4HRI DL | DEM + 고해상도 이미지 딥러닝 | DEM + `torch` 결합 |
+| 7 | 메트릭 (Metric) | 모델 평가 지표 (SSIM, NRMSE, PCC 등) | `sklearn.metrics`, `ssim` |
+| 8 | 시각화 (Visualization) | FITS→PNG, Figure, 위치 플롯, Carrington Map | `matplotlib`, `sunpy.visualization` |
+| 9 | PySR | 심볼릭 회귀 분석 | `pysr`, `sympy` |
+| 10 | FISM AI | FISM EUV 모델 AI 구현 | FISM 전용 |
+| 11 | 경진대회 (Competition) | ML/DL 경진대회 코드 | 대회 프레임워크 |
+| 12 | Aurora 유틸리티 | 오로라 데이터 변환, 투영, 시각화 보조 | 오로라 보조 코드 |
+| 13 | SEP/Flare | 태양 고에너지 입자/플레어 분석 | `sunpy`, SEP/Flare |
+| 14 | 좌표 변환 (Coordinate) | Carrington, 관측기 위치 좌표 변환 | `astropy.coordinates` |
+
+이 범주는 **출발점**이다. 코드 분석 결과에 따라 범주를 추가·병합·분할할 수 있다.
 
 ## 작업 원칙
 
@@ -88,7 +113,10 @@ description: >
 
 ## 팀 통신 프로토콜
 
-- **입력 받는 곳**: code-archaeologist (`inventory/`)
+- **입력 받는 곳**: code-archaeologist (`inventory/`), remote-collector의 범주 정보 (간접, `collection/` 경유)
 - **출력 보내는 곳**: code-refactorer (`clusters/`)
+- **메시지 수신**: archaeologist로부터 인벤토리 완료 알림, orchestrator로부터 작업 지시
+- **메시지 발신**: orchestrator에게 분류 체계 완성 알림 (사용자 승인 요청), code-refactorer에게 분류 인계
+- **작업 요청**: 공유 태스크 리스트에서 "분류 설계" 유형 태스크 처리
 - **사용자 승인**: 분류 체계를 오케스트레이터를 통해 사용자에게 제시 → 승인 후 진행
-- **collector-note.md**: 분류 기준 선택 이유, 입도 판단 근거, 기존 스킬 충돌 분석 기록
+- **collector-note.md**: 분류 기준 선택 이유, 입도 판단 근거, 기존 스킬 충돌 분석, 수집 범주 재조정 이유 기록

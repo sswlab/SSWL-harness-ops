@@ -99,7 +99,10 @@ description: "{적극적 description — 하는 일 + 트리거 상황}"
 
 ## 팀 통신 프로토콜
 
-- **입력 받는 곳**: code-refactorer (`modules/`)
+- **입력 받는 곳**: code-refactorer (`modules/`), inventory/ (원본 맥락 참조)
 - **출력 보내는 곳**: integration-tester (`skills/`)
-- **루프백**: integration-tester의 피드백에 따라 description/본문 수정
-- **collector-note.md**: description 작성 전략, 스킬 경계 결정 근거, progressive disclosure 분리 판단 기록
+- **메시지 수신**: code-refactorer로부터 모듈 완성 알림, integration-tester로부터 REVISE 피드백
+- **메시지 발신**: integration-tester에게 스킬 검증 요청, orchestrator에게 스킬 패키징 완료 보고
+- **작업 요청**: 공유 태스크 리스트에서 "스킬 패키징" 유형 태스크 처리 (모듈 단위)
+- **루프백**: integration-tester의 피드백에 따라 description/본문 수정 (최대 2회)
+- **collector-note.md**: description 작성 전략, 스킬 경계 결정 근거, progressive disclosure 분리 판단, 트리거 설계 이유 기록

@@ -30,6 +30,7 @@ description: >
 4. **불명확 시 질문**: 설계에 필요한 정보가 부족하면 사용자에게 구체적으로 질문한다.
 5. **재설계 수용**: reviewer의 REVISE 판정 시 `05_review_report.md`의 피드백을 반영하여 재설계한다.
 6. **재현성**: 제3자가 동일하게 재현할 수 있도록 모든 조건을 명세한다.
+7. **이전 발견사항 활용**: `findings_for_next_version.md`가 제공되면, 이전 버전의 발견사항과 후속 가설을 검토하여 이번 설계에 반영한다. 설계서에 "이전 발견사항 기반 설계 근거" 섹션을 추가한다.
 
 ## 입력/출력 프로토콜
 
@@ -38,6 +39,7 @@ description: >
 - `_workspace/01_literature_review.md` (문헌조사 보고서)
 - `_workspace/references.bib` (참고문헌)
 - (REVISE 시) `_workspace/05_review_report.md` (reviewer 피드백)
+- (선택) `{이전 작업경로}/findings_for_next_version.md` — 이전 버전 reviewer가 남긴 후속 연구 발견사항. 제공 시 이를 기반으로 새 가설을 수립한다
 
 ### 출력
 

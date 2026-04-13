@@ -64,16 +64,36 @@ literature-reviewer  →  research-designer  →  research-executor  →  review
 |---|---|
 | literature-reviewer | `{작업경로}/01_literature_review.md`, `{작업경로}/references.bib` |
 | research-designer | `{작업경로}/02_research_design.md` |
-| research-executor | `{작업경로}/code/`, `{작업경로}/figures/`, `{작업경로}/tables/`, `{작업경로}/03_execution_log.md` |
+| research-executor | `{작업경로}/code/`, `{작업경로}/figures/`, `{작업경로}/tables/`, `{작업경로}/03_execution_log.md`, (크로스-버전 비교 시) `{작업경로}/tables/version_comparison.md` |
 | paper-writer | `{작업경로}/04_paper_draft.md` |
-| reviewer | `{작업경로}/05_review_report.md`, `{작업경로}/06_referee_report.md` |
+| reviewer | `{작업경로}/05_review_report.md`, `{작업경로}/06_referee_report.md`, (PASS-WITH-FINDINGS 시) `{작업경로}/findings_for_next_version.md` |
 | 공통 | `{작업경로}/research-note.md` (전 과정 생각의 흐름 누적 기록) |
+| 프로젝트 수준 | `{프로젝트_루트}/project-meta.md` (선택, 버전 이력 관리) |
 
 **전달 규칙:**
 1. 각 에이전트는 자신의 지정 파일에만 쓴다
 2. 다른 에이전트의 출력은 읽기 전용으로 참조한다
 3. 모든 중간 산출물은 삭제하지 않고 보존한다
-4. `{작업경로}/research-note.md`에 모든 에이전트가 자기 판단 과정을 누적 기록한다
+4. `{작업경로}/research-note.md`에 모든 에이전트가 자기 판단 과정을 누적 기록한다. **오케스트레이터가 파이프라인 시작 시 자동 생성을 보장하고, 각 Phase 완료 후 기록 여부를 확인한다**
+5. `findings_for_next_version.md`는 사용자가 후속 버전에서 이전 작업경로로 제공하면 research-designer가 참조한다
+6. `version_comparison.md`는 연구자 참고용이며 논문에 직접 포함하지 않는다
+
+## 워크스페이스 네이밍 컨벤션
+
+반복 연구 시 워크스페이스 이름의 일관성을 유지한다.
+
+- **권장 형식**: `{프로젝트_루트}/_workspace-v{N}` (소문자 v + 정수)
+- **예시**: `_workspace-v1`, `_workspace-v2`, ..., `_workspace-v13`
+- 오케스트레이터가 기존 워크스페이스를 감지하여 다음 번호를 제안하나, 사용자 선택을 강제하지 않는다
+- 대소문자 혼재(`_workspace-V5` vs `_workspace-v5`)를 감지하면 경고한다
+
+## 프로젝트 메타데이터
+
+프로젝트 루트에 `project-meta.md`를 두어 버전 간 연속성을 관리할 수 있다 (선택).
+
+- 파이프라인 시작 시 존재하면 읽어서 컨텍스트로 활용
+- 첫 실행 완료 시 없으면 생성 여부를 사용자에게 제안
+- 상세 형식은 `research-orchestrator` 스킬 참조
 
 ## 기술 스택
 
@@ -97,10 +117,11 @@ literature-reviewer  →  research-designer  →  research-executor  →  review
 1. **사용자 승인 필수**: 실행 계획을 제시하고 승인 후 진행
 2. **목적 의식 유지**: 모든 에이전트는 Phase 시작 시 `{목적}`을 참조하고, 결과가 목적에 부합하는지 자체 점검
 3. **결과 투명성**: 성공이든 실패든, 과정과 결과를 명확히 보고
-4. **품질 게이트**: reviewer가 PASS 판정해야 다음 단계로 진행. reviewer는 목적 달성 여부도 판정
+4. **품질 게이트**: reviewer가 PASS / PASS-WITH-FINDINGS / REVISE 판정. PASS-WITH-FINDINGS 시 `findings_for_next_version.md`를 생성하여 후속 연구 방향을 기록
 5. **생각의 흐름 기록**: 모든 판단 과정을 research-note.md에 누적
 6. **재현성**: 코드, 데이터 경로, 파라미터를 명시하여 제3자가 재현 가능
 7. **외부 서비스 자격증명은 사용자에게 묻기**: 아래 "외부 서비스 인증" 절 참조
+8. **내부 용어 차단**: 내부 버전 코드(V1~V13 등), 내부 목표/타겟, 하네스 용어, 내부 파일명, 버전 이력은 논문 초안에 포함하지 않는다. paper-writer가 1차 필터링하고, reviewer가 Phase 6에서 잔존 여부를 확인한다
 
 ## 외부 서비스 인증
 

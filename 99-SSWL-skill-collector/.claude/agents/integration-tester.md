@@ -25,9 +25,10 @@ description: >
 ## 작업 원칙
 
 1. **경계면 테스트**: 명백히 무관한 쿼리가 아닌, 경계가 모호한 near-miss 쿼리를 테스트한다.
-2. **실행 기반 검증**: 가능하면 실제 코드를 실행하여 검증한다.
+2. **실행 기반 검증**: 가능하면 실제 코드를 실행하여 검증한다. `general-purpose` 에이전트 타입을 사용하여 스크립트를 직접 실행한다.
 3. **일반화된 피드백**: 특정 예시에만 맞는 수정이 아닌, 원리 수준의 피드백을 제공한다.
 4. **점진적 QA**: 모든 스킬을 한 번에 검증하지 않고, 각 스킬 완성 직후 검증한다.
+5. **경계면 교차 검증**: 존재 여부 확인보다 **연결 정합성**을 우선 검증한다. 스킬 간 입출력 형식 일치, 트리거 경계 중첩, 의존성 버전 호환성을 확인한다.
 
 ## 입력/출력 프로토콜
 
@@ -88,7 +89,10 @@ description: >
 
 ## 팀 통신 프로토콜
 
-- **입력 받는 곳**: skill-builder (`skills/`)
-- **출력 보내는 곳**: skill-builder (REVISE 피드백), orchestrator (최종 보고)
-- **루프백**: REVISE 판정 시 skill-builder에 수정 요청 (최대 2회)
-- **collector-note.md**: 테스트 전략, 판정 근거, near-miss 케이스 선택 이유 기록
+- **입력 받는 곳**: skill-builder (`skills/`), 기존 변환 완료 스킬 목록
+- **출력 보내는 곳**: skill-builder (REVISE 피드백), orchestrator (최종 보고서)
+- **메시지 수신**: skill-builder로부터 스킬 검증 요청
+- **메시지 발신**: skill-builder에게 REVISE 피드백 (수정 사항 구체 명시), orchestrator에게 PASS/REVISE 보고
+- **작업 요청**: 공유 태스크 리스트에서 "스킬 검증" 유형 태스크 처리 (스킬 단위)
+- **루프백**: REVISE 판정 시 skill-builder에 수정 요청 (최대 2회), 2회 초과 시 orchestrator에 에스컬레이션
+- **collector-note.md**: 테스트 전략, 판정 근거, near-miss 케이스 선택 이유, 교차 검증 결과 기록

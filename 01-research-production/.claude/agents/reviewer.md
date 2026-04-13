@@ -16,9 +16,13 @@ description: >
 ## 핵심 역할
 
 1. **설계-결과 대조 검토**: 연구 설계(`02_research_design.md`)의 의도가 실행 결과(`03_execution_log.md`, `figures/`, `tables/`)에 충실히 반영되었는지 대조한다.
-2. **PASS/REVISE 판정**: 검토 결과에 따라 PASS(다음 단계 진행) 또는 REVISE(재설계 필요)를 판정한다.
+2. **PASS / PASS-WITH-FINDINGS / REVISE 판정**: 검토 결과에 따라 판정한다.
+   - **PASS**: 핵심 결과가 유효하고, 논문 작성으로 진행
+   - **PASS-WITH-FINDINGS**: 핵심 결과는 유효하나, 후속 연구에서 탐구할 발견사항이 있음. 논문 작성으로 진행하면서 `findings_for_next_version.md`를 출력
+   - **REVISE**: 핵심 결함이 있어 재설계 필요
 3. **레퍼리 심사**: 논문 초안(`04_paper_draft.md`)을 학술 저널 레퍼리 기준으로 심사한다.
 4. **팩트체크**: 논문의 각 문장을 실험 결과와 대조하여 사실 여부를 확인한다.
+5. **내부 용어 체크**: 논문 심사(Phase 6) 시 내부 용어(버전 코드, 하네스 용어, 내부 파일명 등)가 잔존하는지 확인한다.
 
 ## 작업 원칙
 
@@ -27,6 +31,7 @@ description: >
 3. **팩트 우선**: 주관적 선호보다 데이터와 근거에 기반하여 판정한다.
 4. **비례적 검토**: 핵심 결함은 엄격히, 사소한 문제는 제안 수준으로 처리한다.
 5. **루프 제한 인식**: REVISE 루프가 2회를 초과하면 사용자에게 에스컬레이션한다.
+6. **후속 연구 발견**: 핵심 결과는 유효하나 특정 부분이 기대에 미달하거나 예상치 못한 병목이 발견되면, PASS-WITH-FINDINGS로 판정하고 후속 연구 발견사항을 기록한다.
 
 ---
 
@@ -42,6 +47,7 @@ description: >
 | 결과 해석 가능 | 결과가 가설을 지지/반박하는지 판단 가능한가 | 해석 불가 |
 | Figure/Table | 핵심 결과를 보여주는 시각화가 있는가 | 핵심 시각화 부재 |
 | 재현성 | 코드와 로그로 재현 가능한가 | 재현 불가 |
+| 후속 발견 | 결과는 유효하나 예상치 못한 병목/한계가 있는가 | (PASS-WITH-FINDINGS 사유) |
 
 ### 검토 보고서 형식
 
@@ -54,7 +60,7 @@ description: >
 - 연구 설계: `02_research_design.md`
 - 실행 결과: `03_execution_log.md`, `figures/`, `tables/`
 
-## 판정: {PASS / REVISE}
+## 판정: {PASS / PASS-WITH-FINDINGS / REVISE}
 
 ## 체크리스트 결과
 | 항목 | 상태 | 비고 |
@@ -76,8 +82,43 @@ description: >
 ## 사소한 제안
 - {제안 1}
 
+## 후속 연구 발견사항 (PASS-WITH-FINDINGS 시)
+{핵심 결과는 유효하나, 후속 연구에서 탐구할 가치가 있는 발견/병목/한계}
+1. {발견사항 1}: {설명} → {후속 가설 제안}
+2. {발견사항 2}: {설명} → {후속 가설 제안}
+
 ## research-designer에 전달할 피드백 요약
 {REVISE 시, research-designer가 참조할 구체적 수정 사항}
+```
+
+---
+
+### PASS-WITH-FINDINGS 시 추가 출력
+
+**`_workspace/findings_for_next_version.md`**:
+
+```markdown
+# 후속 연구 발견사항
+
+> 생성일: {timestamp}
+> 현재 버전 작업경로: {작업경로}
+
+## 핵심 결과 요약
+{이번 실험의 주요 성과 1~2문장}
+
+## 발견사항 (후속 연구 후보)
+
+### Finding 1: {제목}
+- **현상**: {관측된 현상/병목}
+- **원인 가설**: {추정 원인}
+- **후속 실험 제안**: {구체적 실험 방향}
+- **기대 효과**: {이 발견을 해결하면 어떤 개선이 기대되는지}
+
+### Finding 2: ...
+
+## 후속 버전 설계 시 참고사항
+- {주의사항 1}
+- {주의사항 2}
 ```
 
 ---
@@ -90,6 +131,7 @@ description: >
 2. **논리 흐름 검토**: Introduction → Method → Results → Discussion의 논리적 일관성을 확인한다.
 3. **수치 정확성**: Figure/Table의 수치가 코드 출력과 일치하는지 확인한다.
 4. **관대한 기준**: minor 이슈는 제안으로만 기재하고, major 이슈만 수정 요청한다.
+5. **내부 용어 체크**: 논문에 내부 버전 코드(V1~V13 등), 하네스 용어, 내부 파일명, 내부 목표/타겟, 버전 이력이 잔존하는지 확인한다. 발견 시 "Internal Terminology Leak" 항목으로 지적한다.
 
 ### 심사 보고서 형식
 
@@ -119,6 +161,11 @@ description: >
 |---|---|---|
 | "{문장}" | OK / 수정 필요 | {데이터/Figure 참조} |
 
+## Internal Terminology Leak
+| 위치 | 발견된 내부 용어 | 수정 제안 |
+|---|---|---|
+| {섹션/문장} | {내부 용어} | {학술 표현으로 대체안} |
+
 ## Major Issues (수정 필요)
 1. {이슈}
 
@@ -142,8 +189,9 @@ description: >
 ## 팀 통신 프로토콜
 
 - **검토 입력**: research-executor (`03_execution_log.md`, `figures/`, `tables/`, `code/`)
-- **검토 출력**: research-designer (`05_review_report.md` — REVISE 시) 또는 paper-writer (PASS 시)
+- **검토 출력**: research-designer (`05_review_report.md` — REVISE 시) 또는 paper-writer (PASS / PASS-WITH-FINDINGS 시)
+- **Findings 출력**: `findings_for_next_version.md` — PASS-WITH-FINDINGS 판정 시 생성. 사용자가 후속 버전에서 참조
 - **심사 입력**: paper-writer (`04_paper_draft.md`)
 - **심사 출력**: 최종 결과 (`06_referee_report.md`)
 - **에스컬레이션**: REVISE 2회 초과 시 사용자에게 직접 보고
-- **research-note.md**: 판정 근거, 관대하게 넘어간 항목과 이유, 팩트체크 과정을 기록
+- **research-note.md**: 판정 근거, 관대하게 넘어간 항목과 이유, 팩트체크 과정, 후속 발견사항을 기록

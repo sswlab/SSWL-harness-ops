@@ -111,6 +111,52 @@ description: >
 3. 경로가 확정되면 해당 경로에 필요한 하위 디렉토리(`code/`, `figures/`, `tables/` 등)를 생성한다
 4. 이후 모든 `_workspace/` 참조는 `{작업경로}`로 치환된다
 
+### 워크스페이스 네이밍 컨벤션 (R9)
+
+사용자가 작업 경로를 지정할 때, 기존 워크스페이스 이력이 있으면 네이밍 일관성을 제안한다.
+
+- **권장 형식**: `{프로젝트_루트}/_workspace-v{N}` (소문자 v + 정수)
+- **감지 방식**: 사용자가 지정한 경로의 상위 디렉토리에 `_workspace-v*` 패턴이 이미 존재하면, 가장 높은 번호 + 1을 제안
+  - 예: `_workspace-v12`가 마지막이면 → `_workspace-v13` 제안
+- **강제하지 않음**: 사용자가 다른 이름을 선호하면 그대로 사용
+- **혼재 방지**: `_workspace-V5` (대문자)와 `_workspace-v5` (소문자) 혼재를 감지하면 일관성 경고 제시
+
+---
+
+## 프로젝트 메타데이터 (R12)
+
+프로젝트 루트에 `project-meta.md`가 존재하면 파이프라인 시작 시 읽어서 컨텍스트로 활용한다. 없으면 첫 실행 완료 시 생성을 제안한다.
+
+### project-meta.md 형식
+
+```markdown
+# Project Metadata
+
+## 기본 정보
+- **프로젝트명**: {프로젝트 이름}
+- **대상 저널**: {ApJ / A&A / Solar Physics / 미정}
+- **공동 저자**: {목록}
+- **핵심 데이터셋**: {사용하는 주요 데이터}
+
+## 버전 이력
+| 버전 | 작업경로 | 핵심 변경 | 주요 결과 | 상태 |
+|---|---|---|---|---|
+| v1 | _workspace-v1 | 초기 실험 | MAE=0.035 | 완료 |
+| v2 | _workspace-v2 | 채널 추가 | MAE=0.028 | 완료 |
+| ... | ... | ... | ... | ... |
+
+## 현재 상태
+- **활성 버전**: v{N}
+- **다음 단계**: {계획}
+```
+
+### 활용 규칙
+
+1. **읽기**: 파이프라인 시작 시 `{프로젝트_루트}/project-meta.md` 존재 여부를 확인. 있으면 읽어서 모든 에이전트에 컨텍스트로 제공
+2. **생성 제안**: 첫 파이프라인 완료 후 project-meta.md가 없으면 사용자에게 생성 여부를 질문
+3. **업데이트 제안**: 파이프라인 완료 시 "버전 이력" 행 추가와 "현재 상태" 갱신을 제안
+4. **강제하지 않음**: 사용자가 관리를 원하지 않으면 생략
+
 ---
 
 ## 실행 전 안내 메시지
@@ -124,9 +170,28 @@ description: >
 연구 목적: "{목적}"
 연구 모드: {모드} ({모드 설명})
 작업 경로: {작업경로}
+프로젝트 메타: {project-meta.md 존재 시 "감지됨 — 컨텍스트 로드", 없으면 "없음"}
 
 • 모든 생각의 흐름은 {작업경로}/research-note.md에 누적 기록됩니다.
 • 각 단계 완료 시 진행 상황을 보고합니다.
+
+파이프라인을 시작할까요?
+```
+
+**이전 버전이 감지된 경우** (같은 프로젝트 디렉토리에 `_workspace-v*`가 존재):
+
+```
+📋 연구 생산 파이프라인을 시작합니다.
+
+연구 주제: "{주제}"
+연구 목적: "{목적}"
+연구 모드: {모드} ({모드 설명})
+작업 경로: {작업경로}
+이전 버전: {가장 최근 _workspace-v* 경로} 감지
+
+• 이전 버전의 references.bib가 있으면 문헌조사를 증분 모드로 수행합니다.
+• 이전 버전의 findings_for_next_version.md가 있으면 연구 설계에 반영합니다.
+• 이전 버전의 평가 결과가 있으면 크로스-버전 비교를 수행합니다.
 
 파이프라인을 시작할까요?
 ```
@@ -173,16 +238,20 @@ description: >
                 │  → 05_review_report.md │
                 └───────────┬────────────┘
                             │
-                   ┌────────┴────────┐
-                   │                 │
-                REVISE             PASS
-                   │                 │
-                   ▼                 ▼
-              Phase 2로        ┌────────────────────────┐
-              루프백            │  Phase 5: 논문 작성     │
-              (최대 2회)       │  paper-writer          │
-                               │  → 04_paper_draft.md   │
-                               └───────────┬────────────┘
+                   ┌────────┼────────────────┐
+                   │        │                │
+                REVISE    PASS    PASS-WITH-FINDINGS
+                   │        │                │
+                   ▼        │     findings_for_next_
+                Phase 2로   │     version.md 생성
+                루프백       │         │
+                (최대 2회)  └────┬─────┘
+                                ▼
+                   ┌────────────────────────┐
+                   │  Phase 5: 논문 작성     │
+                   │  paper-writer          │
+                   │  → 04_paper_draft.md   │
+                   └───────────┬────────────┘
                                            │
                                            ▼
                                ┌────────────────────────┐
@@ -208,7 +277,7 @@ description: >
 | 1 | literature-reviewer | 사용자 요청 | `01_literature_review.md`, `references.bib` |
 | 2 | research-designer | `01_literature_review.md`, `references.bib`, (REVISE 시) `05_review_report.md` | `02_research_design.md` |
 | 3 | research-executor | `02_research_design.md` | `code/`, `figures/`, `tables/`, `03_execution_log.md` |
-| 4 | reviewer (검토) | `02_research_design.md`, `03_execution_log.md`, `figures/`, `tables/` | `05_review_report.md` |
+| 4 | reviewer (검토) | `02_research_design.md`, `03_execution_log.md`, `figures/`, `tables/` | `05_review_report.md`, (PASS-WITH-FINDINGS 시) `findings_for_next_version.md` |
 | 5 | paper-writer | `01~03` 전부, `figures/`, `tables/`, `references.bib` | `04_paper_draft.md` |
 | 6 | reviewer (심사) | `04_paper_draft.md`, `03_execution_log.md`, `figures/`, `tables/` | `06_referee_report.md` |
 
@@ -221,6 +290,7 @@ description: >
 | 루프백 유형 | 트리거 | 최대 횟수 | 초과 시 |
 |---|---|---|---|
 | **설계 REVISE** | reviewer가 REVISE 판정 | 2회 | 사용자에게 현 상태 보고, 방향 재설정 요청 |
+| **PASS-WITH-FINDINGS** | reviewer가 PASS-WITH-FINDINGS 판정 | (루프백 아님) | `findings_for_next_version.md` 생성 후 Phase 5로 진행. 후속 버전에서 사용자가 이 파일을 제공하면 research-designer가 참조 |
 | **추가 문헌 조사** | research-designer가 문헌 부족 보고 | 1회 | 가용 문헌 범위에서 설계 진행 |
 | **추가 Figure/Table** | paper-writer가 research-executor에 요청 | 2회 | 가용 자료만으로 작성 |
 
@@ -240,12 +310,24 @@ description: >
 | 4 | 검토 불가 (자료 부재) | 높음 | research-executor에 재실행 요청 |
 | 5 | Figure 5개 초과 | 낮음 | 우선순위에 따라 자동 선별 |
 | 6 | 팩트체크 불일치 발견 | 중간 | paper-writer에 수정 요청 |
+| 6 | 내부 용어 잔존 발견 | 중간 | paper-writer에 "Internal Terminology Leak" 수정 요청 |
+| 4 | PASS-WITH-FINDINGS 판정 | 낮음 | `findings_for_next_version.md` 생성 후 Phase 5로 정상 진행 |
+| - | research-note.md 미기록 | 낮음 | 해당 에이전트에 기록 요청 후 진행 |
+| - | 이전 버전 경로 접근 불가 | 낮음 | 크로스-버전 비교/증분 문헌 건너뛰고 정상 진행 |
 
 ---
 
 ## research-note.md 기록 규칙
 
 모든 에이전트는 `{작업경로}/research-note.md`에 자신의 판단 과정을 누적 기록한다.
+
+### 오케스트레이터의 보장 책임
+
+1. **자동 생성**: 파이프라인 시작 시 `research-note.md`가 없으면 아래 표준 구조로 자동 생성한다
+2. **Phase 완료 확인**: 각 Phase 완료 후, 해당 에이전트가 research-note.md에 기록했는지 확인한다. 미기록 시 에이전트에게 기록을 요청한다
+3. **Summary 작성**: 파이프라인 완료 시 "Summary / Next Steps" 섹션을 추가한다
+
+### 표준 구조
 
 ```markdown
 # Research Note
@@ -255,6 +337,8 @@ description: >
 - **목적**: {목적}
 - **모드**: {모드}
 - **시작일**: {timestamp}
+- **작업 경로**: {작업경로}
+- **이전 버전**: {이전 작업경로 또는 "없음 (신규)"}
 
 ---
 
@@ -263,31 +347,55 @@ description: >
 - 검색 전략 선택 이유: ...
 - 논문 선별 기준: ...
 - 아이디어 구체화 판단: ...
+- (증분 모드 시) 이전 references.bib에서 계승한 논문 수: ...
+- (증분 모드 시) 신규 발견 논문 수: ...
 
 ## [Phase 2: 연구 설계] {timestamp}
 ### research-designer
 - 가설 설정 근거: ...
 - 방법론 선택 이유: ...
 - 고려한 대안: ...
+- (이전 findings 참조 시) 반영한 발견사항: ...
 
 ## [Phase 3: 실험 실행] {timestamp}
 ### research-executor
 - 구현 결정 사항: ...
 - 예상과 다른 결과: ...
+- (크로스-버전 비교 시) 이전 대비 주요 변화: ...
 
 ## [Phase 4: 품질 검토] {timestamp}
 ### reviewer
+- 판정: {PASS / PASS-WITH-FINDINGS / REVISE}
 - 판정 근거: ...
 - 관대하게 넘어간 항목: ...
+- (PASS-WITH-FINDINGS 시) 후속 발견사항 요약: ...
 
-...
+## [Phase 5: 논문 작성] {timestamp}
+### paper-writer
+- 스토리라인 구성 이유: ...
+- Figure/Table 선별 기준: ...
+- 내부 용어 변환 내역: ...
+
+## [Phase 6: 레퍼리 심사] {timestamp}
+### reviewer
+- 종합 판정: ...
+- 팩트체크 핵심 발견: ...
+
+---
+
+## Summary / Next Steps
+- **핵심 성과**: {이번 버전의 주요 결과 1~2문장}
+- **한계/미해결**: {남은 과제}
+- **후속 제안**: {다음 버전에서 시도할 것}
 ```
 
-**규칙:**
+### 기록 규칙
+
 - 각 에이전트는 자기 Phase 섹션에만 추가한다
 - 기존 내용을 수정하지 않고 누적만 한다
 - timestamp를 반드시 포함한다
 - 판단의 **이유**를 반드시 기록한다
+- **오케스트레이터가 빈 섹션을 감지하면 해당 에이전트에 기록을 요청한다**
 
 ---
 

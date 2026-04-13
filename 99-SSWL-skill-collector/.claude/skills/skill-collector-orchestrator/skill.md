@@ -5,7 +5,9 @@ description: >
   파이프라인 총괄 오케스트레이터. 코드를 정리해줘, 스킬로 만들어줘, 코드 분석해줘,
   코드 모아줘, 코드 수집, 코드 변환, 스킬 수집, inbox에 코드 넣었어, 정리 안 된
   코드가 있어, 연구실 코드 정리, 기존 코드 활용, 코드 재사용, 코드 묶어줘,
-  비슷한 코드 합쳐줘, 모듈화해줘 요청 시 반드시 이 스킬을 사용할 것.
+  비슷한 코드 합쳐줘, 모듈화해줘, 원격 서버 코드 수집, 서버에서 코드 가져와,
+  99서버 코드 정리, 다른 서버 코드 모아줘, SSH 코드 수집
+  요청 시 반드시 이 스킬을 사용할 것.
 ---
 
 # Skill-Collector-Orchestrator — 코드→스킬 변환 파이프라인 총괄
@@ -27,6 +29,7 @@ description: >
 | 2 | **변환 목적** | `{목적}` | "이 코드를 스킬로 만드는 목적이 무엇인가요? (예: 연구실 공용 도구화, 하네스 보강 등)" |
 | 3 | **변환 모드** | `{모드}` | 아래 모드 선택지를 제시 |
 | 4 | **작업 경로** | `{작업경로}` | "중간 결과물을 저장할 작업 경로를 알려주세요." |
+| 5 | **원격 서버 정보** (선택) | `{원격서버}` | "원격 서버에서 수집할 경우: user@hostname:/path (예: youn_j@163.180.171.99:/userhome/youn_j/)" |
 
 ### 변환 모드 선택지
 
@@ -44,6 +47,11 @@ description: >
 [3] 단일 변환 (Targeted)
     - 특정 파일/함수만 지정하여 스킬로 변환
     - 적합: 변환할 코드가 명확할 때
+
+[4] 원격 수집 + 전체 변환 (Remote Collection + Full Scan)
+    - 원격 서버에서 코드를 수집한 후, 전체 분석·분류·변환
+    - 적합: 다른 서버에 흩어진 연구 코드를 처리할 때
+    - 추가 필요: 원격 서버 SSH 접속 정보 (user@hostname:/path)
 ```
 
 ---
@@ -80,6 +88,17 @@ description: >
 | 4 | skill-builder | 1개 스킬 패키징. |
 | 5 | integration-tester | 1개 스킬 검증. |
 
+### 원격 수집 + 전체 변환 (Remote Collection + Full Scan)
+
+| Phase | 에이전트 | 프리셋 |
+|---|---|---|
+| 0 | remote-collector | **핵심.** 원격 서버 전체 스캔. 버전 계보 분석 + 최적 버전 선별 + 범주별 전송. 선별 목록 사용자 승인 후 전송 실행. |
+| 1 | code-archaeologist | remote-collector의 `collection/` 매니페스트 활용. 버전 교차 검증 + 노트북 분석 포함. |
+| 2 | taxonomy-architect | remote-collector의 범주를 기반으로 분류 체계 설계. 필요 시 재분류. |
+| 3 | code-refactorer | 클러스터별 순차 리팩터링. 버전 간 통합 포함. |
+| 4 | skill-builder | 모든 대상 클러스터를 스킬로 패키징. |
+| 5 | integration-tester | 전체 스킬 검증. 트리거 + 실행 + 충돌 테스트. |
+
 ---
 
 ## 작업 경로 설정
@@ -112,6 +131,16 @@ description: >
 파이프라인을 시작할까요?
 ```
 
+**원격 수집 모드인 경우 추가 안내:**
+
+```
+[원격 수집 모드]
+원격 서버: {원격서버}
+- 원격 서버의 파일은 수정하지 않습니다 (읽기 전용 스캔).
+- 수집 대상 파일 목록을 먼저 보여드리고 확인을 받겠습니다.
+- 전송된 코드는 범주별로 inbox/에 정리됩니다.
+```
+
 ---
 
 ## 파이프라인 흐름도
@@ -122,6 +151,14 @@ description: >
 └────────────────────────────┬────────────────────────────────┘
                              │
                              ▼
+                ┌────────────────────────┐
+                │  Phase 0: 원격 수집     │  ← 원격 모드 전용
+                │  remote-collector      │
+                │  → collection/ + inbox/│
+                │  ★ 선별 목록 승인 ★     │
+                └───────────┬────────────┘
+                            │ (로컬 모드는 여기서 시작)
+                            ▼
                 ┌────────────────────────┐
                 │  Phase 1: 코드 분석     │
                 │  code-archaeologist    │
@@ -179,7 +216,8 @@ description: >
 
 | Phase | 에이전트 | 입력 | 출력 |
 |---|---|---|---|
-| 1 | code-archaeologist | `{inbox경로}` | `inventory/00_code_inventory.md`, `inventory/01_dependency_graph.md`, `inventory/02_duplicate_candidates.md` |
+| 0 | remote-collector | `{원격서버}` + SSH (원격 모드 전용) | `collection/00_scan_manifest.md`, `01_version_lineages.md`, `02_selected_files.md`, `03_transfer_log.md`, `inbox/{category}/` |
+| 1 | code-archaeologist | `{inbox경로}`, `collection/` (선택적) | `inventory/00_code_inventory.md`, `inventory/01_dependency_graph.md`, `inventory/02_duplicate_candidates.md`, `inventory/03_version_lineages.md`, `inventory/04_notebook_analysis.md` |
 | 2 | taxonomy-architect | `inventory/*` | `clusters/00_taxonomy.md`, `clusters/01_merge_split_plan.md` |
 | 3 | code-refactorer | `clusters/*`, `{inbox경로}` (읽기 전용) | `modules/{cluster}/`, `modules/refactoring_log.md` |
 | 4 | skill-builder | `modules/*`, `inventory/*` | `skills/{skill-name}/`, `skills/skill_catalog.md` |
@@ -193,6 +231,7 @@ description: >
 
 | 시점 | 내용 | 형식 |
 |---|---|---|
+| Phase 0 완료 후 (원격 모드) | 수집 대상 파일 목록 + 버전 선택 근거 | `collection/02_selected_files.md` 요약 제시 |
 | Phase 2 완료 후 | 분류 체계 + 병합/분리 계획 | `clusters/00_taxonomy.md` 요약 제시 |
 | Phase 5 PASS 후 | 최종 스킬 목록 + 배포 대상 확인 | `skills/skill_catalog.md` 요약 제시 |
 
@@ -224,6 +263,11 @@ description: >
 
 | Phase | 에러 유형 | 심각도 | 대응 |
 |---|---|---|---|
+| 0 | SSH 연결 실패 | 높음 | 서버 정보 재확인 요청, SSH 키 설정 안내 |
+| 0 | 파일 수 과다 (>500개) | 중간 | 대규모 스캔 전략 적용, 예상 시간 안내 |
+| 0 | 버전 선택 불분명 | 중간 | 후보 목록 제시, 사용자 판단 요청 |
+| 0 | 전송 공간 부족 | 높음 | 총 용량 사전 안내, 사용자 확인 |
+| 0 | 원격 디렉토리 접근 불가 | 중간 | 접근 가능 디렉���리만 스캔, 보고 |
 | 1 | inbox 비어있음 | 높음 | 사용자에게 코드 경로 재확인 |
 | 1 | 파일 수 과다 (>50개) | 중간 | 1차 스캔 후 우선순위 분류 |
 | 1 | 비코드 파일 혼입 | 낮음 | 필터링 후 보고 |
@@ -341,4 +385,32 @@ Phase 4 (2차): skill-builder
 
 Phase 5 (2차): integration-tester
   → PASS
+```
+
+### 시나리오 4: 원격 수집 — 다중 서버 코드 수집
+
+```
+사용자: "99서버에 있는 연구 코드를 수집해서 스킬로 만들어줘.
+        서버: youn_j@163.180.171.99:/userhome/youn_j/
+        목적: 흩어진 코드를 정리하여 재사용 가능하게
+        모드: 원격 수집 + 전체 변환
+        경로: /home/youn_j/skill-collector-workspace"
+
+Phase 0: remote-collector
+  → SSH 접속, find로 628개 .py + 393개 .ipynb 발견
+  → 45개 버전 계열 식별 (DEM_V1~V3, aurora_V3_1 등)
+  → 각 계열에서 최적 버전 선별 → 162개 파일
+  → 14개 범주로 분류 (전처리, DL Pix2Pix, DEM 등)
+  → [사용자 승인: 선별 파일 목록 확인]
+  → 승인 후 zip 전송 → inbox/에 범주별 배치
+
+Phase 1: code-archaeologist
+  → collection/ 매니페스트 활용하여 효율적 분석
+  → 버전 계보 교차 검증
+  → .ipynb 전용 분석 수행
+  → inventory/ 생성
+
+Phase 2~5: 정상 진행
+  → 분류 → [승인] → 리팩터링 → 패키징 → 검증
+  → 최종 스킬 배포
 ```

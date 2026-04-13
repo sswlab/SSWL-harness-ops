@@ -110,19 +110,25 @@ export.wait()
 
 ---
 
-## 코드 구조 템플릿
+## 코드 구조 가이드
+
+코드 파일은 연구 내용에 맞게 자유롭게 구성하되, naming convention을 준수한다.
 
 ```
 _workspace/code/
-├── config.py              # 모든 설정을 한 곳에
-├── 01_data_download.py    # 데이터 다운로드
-├── 02_preprocessing.py    # 전처리
-├── 03_baseline.py         # Baseline 실행
-├── 04_experiment.py       # Experiment 실행
-├── 05_analysis.py         # 비교 분석 및 통계
-├── 06_figures.py          # Figure 생성
-└── utils.py               # 공통 유틸리티
+├── config.py                        # [필수] 모든 설정을 한 곳에
+├── utils.py                         # [필수] 공통 유틸리티
+├── {NN}_{동사}_{대상}.py             # 실행 스크립트 (자유 구성)
+└── ...
 ```
+
+### Naming Convention
+
+- **형식**: `{NN}_{동사}_{대상}.py`
+- **번호(NN)**: 실행 순서를 나타내는 2자리 정수 (01~)
+- **동사**: download, preprocess, build, train, evaluate, plot, extract, merge 등
+- **예시**: `01_download_goes_xrs.py`, `02_preprocess_stix.py`, `03_build_dataset.py`, `04_train_bilstm.py`, `05_evaluate.py`, `06_plot_results.py`
+- **config.py, utils.py**: 번호 없이 고정 이름
 
 ### config.py 템플릿
 
