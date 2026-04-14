@@ -50,6 +50,12 @@ SSWL-harness-ops/
 │       ├── CLAUDE.md
 │       └── agents/  (5개)
 │
+├── 07-idl2python/                     ← IDL→Python 코드 변환 하네스
+│   └── .claude/
+│       ├── CLAUDE.md
+│       ├── agents/  (4개)
+│       └── skills/  (3개)
+│
 ├── 99-SSWL-skill-collector/           ← 연구실 코드 → 스킬 변환 하네스
 │   └── .claude/
 │       ├── CLAUDE.md
@@ -219,6 +225,27 @@ claude
 > "모의 피어리뷰 돌려줘"
 ```
 
+### 07-idl2python — IDL→Python 코드 변환
+
+```bash
+cd /home/youn_j/SSWL-harness-ops/07-idl2python
+claude
+```
+
+IDL `.pro` 파일을 Python으로 변환하고, 테스트를 통해 정확성을 검증합니다. 배열 인덱싱 자동 전치(column-major→row-major), SSW→SunPy/Astropy 매핑, 테스트 데이터 자동 확보를 지원합니다. 다중 파일은 병렬 변환/테스트합니다. [dnidever/idl2py](https://github.com/dnidever/idl2py) 참고.
+
+| 에이전트 | 역할 |
+|---|---|
+| idl-analyzer | .pro 파싱, 의존성 분석, 변환 계획 수립 |
+| python-translator | IDL→Python 구문 변환, 라이브러리 매핑 |
+| test-engineer | 테스트 작성, 데이터 확보, 병렬 테스트 실행 |
+| conversion-reviewer | 변환 정확성 검증, PASS/REVISE 판정 |
+
+```
+> "solar_prep.pro를 Python으로 변환해줘"
+> "이 디렉토리의 IDL 코드를 전부 Python으로 마이그레이션해줘"
+```
+
 ### 99-SSWL-skill-collector — 연구실 코드 → 스킬 변환
 
 ```bash
@@ -257,5 +284,6 @@ pip install sunpy astropy aiapy drms pandas numpy scipy matplotlib scikit-learn
 - 논문 번역 하네스: `04-paper-mate/.claude/CLAUDE.md`
 - Symbolic Regression 하네스: `05-symbolic-regression/.claude/CLAUDE.md`
 - 논문 교정 하네스: `06-paper-editor/.claude/CLAUDE.md`
+- IDL→Python 변환 하네스: `07-idl2python/.claude/CLAUDE.md`
 - 스킬 변환 하네스: `99-SSWL-skill-collector/.claude/CLAUDE.md`
 - 프로젝트 시나리오: `docs/scenarios.md`

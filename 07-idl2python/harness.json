@@ -1,0 +1,4 @@
+{
+  "name": "IDL-to-Python 변환기",
+  "description": "IDL .pro 파일을 Python으로 변환하고, 테스트를 통해 정확성을 검증하는 자동화 파이프라인"
+}
