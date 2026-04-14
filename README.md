@@ -30,14 +30,31 @@ SSWL-harness-ops/
 ├── 03-paper-writer/                   ← 논문 작성 및 피어리뷰 하네스
 │   └── .claude/
 │       ├── CLAUDE.md
-│       ├── agents/  (4개)
+│       ├── agents/  (5개)
 │       └── skills/  (4개)
+│
+├── 04-paper-mate/                     ← 논문 번역 및 분석 하네스
+│   └── .claude/
+│       ├── CLAUDE.md
+│       ├── agents/  (6개)
+│       └── skills/  (1개)
 │
 ├── 05-symbolic-regression/            ← Symbolic Regression 연구 하네스
 │   └── .claude/
 │       ├── CLAUDE.md
 │       ├── agents/  (4개)
 │       └── skills/  (3개)
+│
+├── 06-paper-editor/                   ← 논문 교정 및 모의 피어리뷰 하네스
+│   └── .claude/
+│       ├── CLAUDE.md
+│       └── agents/  (5개)
+│
+├── 99-SSWL-skill-collector/           ← 연구실 코드 → 스킬 변환 하네스
+│   └── .claude/
+│       ├── CLAUDE.md
+│       ├── agents/  (6개)
+│       └── skills/  (4개)
 │
 ├── docs/                              # 프로젝트 참고 문서
 └── PPT/                               # 팜플렛/발표 자료
@@ -103,6 +120,7 @@ claude
 | 에이전트 | 역할 |
 |---|---|
 | researcher | 연구 결과 정리, 논문 초안 + 커버레터 작성, 리비전 수행 |
+| co-worker | 한 문장씩 검토: 논리 흐름, 용어 통일, 팩트체크, 내부 용어 차단 |
 | editor | 논문 접수, 리뷰어 배정(전문분야/성격), 리뷰 취합, 판정 |
 | reviewer-1 | 한줄씩 팩트체크, 전문분야 중심 리뷰 |
 | reviewer-2 | 한줄씩 팩트체크, reviewer-1과 다른 전문분야 중심 리뷰 (병렬) |
@@ -110,6 +128,28 @@ claude
 ```
 > "이 연구 결과로 ApJ에 투고할 논문 써줘"
 > "01-research-production의 태양 플레어 연구 결과로 논문 만들어줘"
+```
+
+### 04-paper-mate — 논문 번역 및 분석
+
+```bash
+cd /home/youn_j/SSWL-harness-ops/04-paper-mate
+claude
+```
+
+영어 논문을 입력하면 **챕터별 병렬 번역 → 용어 통일 → 참고문헌 분석 → Q&A 답변**까지 수행합니다.
+
+| 에이전트 | 역할 |
+|---|---|
+| paper-fetcher | 논문 확보, 구조 분석, 그림 목록 추출 |
+| chapter-translator | 챕터/섹션을 한국어로 병렬 번역 |
+| figure-analyst | 그림의 시각적 내용·인사이트를 한국어로 상세 설명 |
+| context-harmonizer | 병렬 번역 챕터 통합, 용어 통일, 문맥 조정 |
+| reference-analyst | 참고문헌 중요도 분류, 필수 논문 요약 |
+| qa-companion | 번역 완료 후 사용자 Q&A 답변 |
+
+```
+> "이 논문 번역해줘" (DOI, 제목, 파일 경로 제공)
 ```
 
 ### 01-research-production — 연구 생산 (논문 파이프라인)
@@ -157,21 +197,49 @@ claude
 
 설치는 `cd 05-symbolic-regression && bash install.sh` (PyPI는 requirements.txt, GitHub 기반 도구는 자동 clone).
 
-산출물은 모두 `_workspace/` 하위에 생성됩니다:
+### 06-paper-editor — 논문 교정 및 모의 피어리뷰
+
+```bash
+cd /home/youn_j/SSWL-harness-ops/06-paper-editor
+claude
+```
+
+기존 논문(.tex, .pdf, .md)의 **문법 교정, 팩트체크, 모의 피어리뷰, 구조 개선**을 수행합니다. 작업 모드를 선택하면 해당 에이전트가 실행됩니다.
+
+| 에이전트 | 역할 |
+|---|---|
+| grammar-editor | 문법·표현·일관성 교정 |
+| fact-checker | 수치·주장을 코드/데이터/Figure와 대조 검증 |
+| structure-advisor | 섹션 구성·논리 흐름·Figure/Table 배치 분석, 개선안 제시 |
+| reviewer | 한줄씩 팩트체크 + 방법론/데이터/해석 평가 (모의 리뷰) |
+| reference-finder | NASA ADS/arXiv에서 참고문헌 검색·추천 |
 
 ```
-_workspace/
-├── 01_literature_review.md    # 문헌조사
-├── 02_research_design.md      # 연구 설계
-├── 03_execution_log.md        # 실행 로그
-├── 04_paper_draft.md          # 논문 초안
-├── 05_review_report.md        # 검토 보고서
-├── 06_referee_report.md       # 레퍼리 심사
-├── research-note.md           # 전 과정 생각의 흐름
-├── references.bib             # 참고문헌
-├── code/                      # 실행 코드
-├── figures/                   # Figure (DPI=300)
-└── tables/                    # Table (CSV + Markdown)
+> "이 논문 문법 교정해줘"
+> "모의 피어리뷰 돌려줘"
+```
+
+### 99-SSWL-skill-collector — 연구실 코드 → 스킬 변환
+
+```bash
+cd /home/youn_j/SSWL-harness-ops/99-SSWL-skill-collector
+claude
+```
+
+연구실에 축적된 코드, 스크립트, 유틸리티를 분석·분류하여 **재사용 가능한 Claude Code 스킬**로 변환합니다. 로컬 또는 원격 서버의 코드를 수집할 수 있습니다.
+
+| 에이전트 | 역할 |
+|---|---|
+| remote-collector | SSH 기반 원격 서버 코드 탐색, 버전 선별, 로컬 전송 |
+| code-archaeologist | 원본 코드 분석, 목적·의존성·I/O 패턴 파악 |
+| taxonomy-architect | 기능별 클러스터링, 중복 식별, 분류 체계 설계 |
+| code-refactorer | 중복 병합, 모듈화, 인터페이스 표준화 |
+| skill-builder | 모듈 → skill.md 변환, description 작성 |
+| integration-tester | 스킬 트리거 검증, 실행 테스트, 충돌 확인 |
+
+```
+> "내 연구 코드를 스킬로 변환해줘"
+> "원격 서버 /home/user/scripts/ 에 있는 코드 수집해서 스킬로 만들어줘"
 ```
 
 ## 사전 준비
@@ -186,5 +254,8 @@ pip install sunpy astropy aiapy drms pandas numpy scipy matplotlib scikit-learn
 - 연구 생산 하네스: `01-research-production/.claude/CLAUDE.md`
 - 학회 발표 PPT 하네스: `02-conference-presentation-generator/.claude/CLAUDE.md`
 - 논문 작성 하네스: `03-paper-writer/.claude/CLAUDE.md`
+- 논문 번역 하네스: `04-paper-mate/.claude/CLAUDE.md`
 - Symbolic Regression 하네스: `05-symbolic-regression/.claude/CLAUDE.md`
+- 논문 교정 하네스: `06-paper-editor/.claude/CLAUDE.md`
+- 스킬 변환 하네스: `99-SSWL-skill-collector/.claude/CLAUDE.md`
 - 프로젝트 시나리오: `docs/scenarios.md`
