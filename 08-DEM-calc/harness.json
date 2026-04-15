@@ -1,0 +1,4 @@
+{
+  "name": "DEM 계산기",
+  "description": "6개 파장 이미지와 응답 함수를 입력받아 DEMreg 또는 SITES 방법으로 DEM(Differential Emission Measure) 맵을 계산하고 시각화하는 자동화 파이프라인"
+}
