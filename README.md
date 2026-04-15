@@ -56,6 +56,12 @@ SSWL-harness-ops/
 │       ├── agents/  (4개)
 │       └── skills/  (3개)
 │
+├── 08-DEM-calc/                       ← DEM 계산 하네스
+│   └── .claude/
+│       ├── CLAUDE.md
+│       ├── agents/  (4개)
+│       └── skills/  (1개)
+│
 ├── 99-SSWL-skill-collector/           ← 연구실 코드 → 스킬 변환 하네스
 │   └── .claude/
 │       ├── CLAUDE.md
@@ -246,6 +252,27 @@ IDL `.pro` 파일을 Python으로 변환하고, 테스트를 통해 정확성을
 > "이 디렉토리의 IDL 코드를 전부 Python으로 마이그레이션해줘"
 ```
 
+### 08-DEM-calc — DEM 계산
+
+```bash
+cd /home/youn_j/SSWL-harness-ops/08-DEM-calc
+claude
+```
+
+6개 파장(SDO/AIA 94, 131, 171, 193, 211, 335 Å) 이미지와 온도 응답 함수를 입력받아 DEM(Differential Emission Measure) 맵을 계산하고 시각화합니다. DEMreg(GSVD+Tikhonov)와 SITES(반복적 가중 역산) 두 가지 역산 방법을 지원합니다.
+
+| 에이전트 | 역할 |
+|---|---|
+| data-validator | 6채널 이미지, 응답 함수 검증 |
+| dem-calculator | DEM 역산 (DEMreg / SITES) |
+| result-visualizer | DEM 맵 시각화, 멀티 패널 Figure |
+| quality-reviewer | 품질 검토, PASS/REVISE 판정 |
+
+```
+> "이 AIA 데이터로 DEM 계산해줘 (DEMreg)"
+> "DEMreg와 SITES 양쪽으로 비교 분석해줘"
+```
+
 ### 99-SSWL-skill-collector — 연구실 코드 → 스킬 변환
 
 ```bash
@@ -285,5 +312,6 @@ pip install sunpy astropy aiapy drms pandas numpy scipy matplotlib scikit-learn
 - Symbolic Regression 하네스: `05-symbolic-regression/.claude/CLAUDE.md`
 - 논문 교정 하네스: `06-paper-editor/.claude/CLAUDE.md`
 - IDL→Python 변환 하네스: `07-idl2python/.claude/CLAUDE.md`
+- DEM 계산 하네스: `08-DEM-calc/.claude/CLAUDE.md`
 - 스킬 변환 하네스: `99-SSWL-skill-collector/.claude/CLAUDE.md`
 - 프로젝트 시나리오: `docs/scenarios.md`
