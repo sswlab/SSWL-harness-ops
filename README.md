@@ -62,6 +62,11 @@ SSWL-harness-ops/
 │       ├── agents/  (4개)
 │       └── skills/  (1개)
 │
+├── 09-tex-editor/                     ← LaTeX 원고 컴파일·검토·수정 하네스
+│   └── .claude/
+│       ├── CLAUDE.md
+│       └── agents/  (4개)
+│
 ├── 99-SSWL-skill-collector/           ← 연구실 코드 → 스킬 변환 하네스
 │   └── .claude/
 │       ├── CLAUDE.md
@@ -273,6 +278,26 @@ claude
 > "DEMreg와 SITES 양쪽으로 비교 분석해줘"
 ```
 
+### 09-tex-editor — LaTeX 원고 컴파일·검토·수정
+
+```bash
+cd /home/youn_j/SSWL-harness-ops/09-tex-editor
+claude
+```
+
+LaTeX 원고(`.tex` + 보조 파일)를 입력하면 **컴파일 → 시각·문법 검토 → 수정된 `.tex` 출력**까지 수행합니다. GPT Prism과 유사한 AI LaTeX 편집기 역할을 로컬 에이전트 팀으로 구현했습니다. 로그 경고뿐 아니라 PDF 페이지를 PNG로 렌더해 **실제로 시각 문제(표 잘림, 그림 마진 초과, 캡션 분리 등)를 관찰**합니다.
+
+| 에이전트 | 역할 |
+|---|---|
+| latex-compiler | `latexmk` 컴파일, 로그 파싱(에러·경고·미해결 참조), `pdftoppm`으로 페이지 PNG 렌더링 |
+| visual-inspector | PNG를 직접 관찰해 시각 문제 탐지 (표 잘림, 그림 overflow, 캡션 분리, 페이지 경계 이상 등) |
+| grammar-checker | 영문 문법 오류·오탈자만 보수적으로 검토 (내용·문체 불간섭) |
+| tex-editor | 3개 리포트 통합하여 `revised.tex` 생성 (컴파일 에러 해소 최우선) |
+
+```
+> "이 tex 파일 편집해줘: /home/youn_j/papers/my_paper/main.tex"
+```
+
 ### 99-SSWL-skill-collector — 연구실 코드 → 스킬 변환
 
 ```bash
@@ -313,5 +338,6 @@ pip install sunpy astropy aiapy drms pandas numpy scipy matplotlib scikit-learn
 - 논문 교정 하네스: `06-paper-editor/.claude/CLAUDE.md`
 - IDL→Python 변환 하네스: `07-idl2python/.claude/CLAUDE.md`
 - DEM 계산 하네스: `08-DEM-calc/.claude/CLAUDE.md`
+- LaTeX 편집 하네스: `09-tex-editor/.claude/CLAUDE.md`
 - 스킬 변환 하네스: `99-SSWL-skill-collector/.claude/CLAUDE.md`
 - 프로젝트 시나리오: `docs/scenarios.md`
