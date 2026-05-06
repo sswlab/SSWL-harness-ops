@@ -21,10 +21,12 @@ description: >
 ## 필수 입력 확인 및 검증
 
 파이프라인 시작 전, 아래 4가지 항목을 **모두** 확보해야 한다.
+이 4가지는 Phase 0 Socratic 인테이크의 **시드(seed)** 로만 사용되며,
+실제 연구 의도의 명료화는 Phase 0에서 `intake-interviewer` 에이전트가 수행한다.
 사용자의 쿼리에서 확인되지 않는 항목은 **반드시 되물어서** 확보한다.
 한 번에 모든 누락 항목을 질문한다 (항목별로 따로 묻지 않는다).
 
-### 필수 항목
+### 필수 항목 (Phase 0 시드)
 
 | # | 항목 | 변수 | 누락 시 질문 |
 |---|---|---|---|
@@ -198,6 +200,54 @@ description: >
 
 ---
 
+## Phase 0 — Socratic 인테이크 (Ouroboros식 모호성 해소)
+
+필수 4항목이 확보되고 사용자가 파이프라인 시작에 동의하면, **Phase 1 문헌조사 전에 반드시 Phase 0를 실행한다**.
+Phase 0의 목적은 후속 에이전트가 흔들리지 않을 **봉인된 spec**을 만드는 것이다.
+
+### 실행 주체
+- 에이전트: `intake-interviewer` (Sonnet 모델 — `claude-sonnet-4-6`)
+- 사용자와 직접 Q&A 라운드를 반복한다.
+
+### 게이트 임계값 (모드별 차등)
+
+| 모드 | Ambiguity 임계값 | 의미 |
+|---|---|---|
+| 탐색형 (Survey) | ≤ 0.35 | 65% 명료 |
+| 심층형 (Deep Dive) | ≤ 0.20 | 80% 명료 |
+| 전체 (Full) | ≤ 0.20 | 80% 명료 |
+
+### Ambiguity 산식
+
+```
+Ambiguity = 1 - Σ(clarity_i × weight_i)
+```
+
+차원·가중치는 `intake-interviewer` 에이전트 카드에 정의되어 있다(목적/제약/성공기준/배경).
+이전 버전 작업경로가 감지되면 "배경" 가중치가 상향된다.
+
+### 진행 규칙
+
+1. **시드 전달**: 오케스트레이터는 4시드(`{주제}/{목적}/{모드}/{작업경로}`)와 (있다면) 이전 작업경로 spec을 `intake-interviewer`에 전달한다.
+2. **라운드 반복**: 한 라운드에 1~3개 질문 → 사용자 답변 → 재채점. 라운드 간 사용자 답변과 점수 변화는 모두 `research-note.md` Phase 0 섹션에 누적 기록.
+3. **하드캡**: **8라운드**. 도달 시 사용자에게 (A) 차원 전환 / (B) 강제 봉인 / (C) 중단 옵션 제시.
+4. **정체 감지**: 직전 라운드 대비 Ambiguity 감소 < 0.03이면 정체 플래그. 정체 2회 연속 시 위 옵션 제시.
+5. **봉인**: 임계값 통과 시 `{작업경로}/00_intake_spec.md`를 immutable spec으로 작성. 이후 변경은 사용자 명시 승인 시에만 "변경 이력" 추가 방식으로 허용.
+6. **봉인 후 핸드오프**: `literature-reviewer`와 `research-designer`는 모두 `00_intake_spec.md`를 단일 진실원으로 참조한다.
+
+### 봉인 후 변경 시 영향 분석
+
+`00_intake_spec.md` 변경이 후속 산출물에 미치는 영향을 오케스트레이터가 안내한다:
+
+| 변경된 섹션 | 영향 받는 산출물 | 권장 조치 |
+|---|---|---|
+| 1. 연구 의도 (목적) | 전 단계 | 전체 재실행 |
+| 2. 범위 및 제약 | 02 설계, 03 실행 | 설계 단계부터 재실행 |
+| 3. 성공 기준 | 02 설계, 04 검토 | 설계·검토 재실행 |
+| 5. 명시적 비목표 | 01 문헌, 02 설계 | 영향 평가 후 부분 재실행 |
+
+---
+
 ## 파이프라인 흐름도
 
 ```
@@ -206,6 +256,16 @@ description: >
 └────────────────────────────┬────────────────────────────────┘
                              │
                              ▼
+                ┌────────────────────────┐
+                │  Phase 0: Socratic     │
+                │  인테이크 (Sonnet)     │
+                │  intake-interviewer    │
+                │  → Ambiguity 루프      │
+                │  → 00_intake_spec.md   │
+                │    (immutable, 봉인)   │
+                └───────────┬────────────┘
+                            │
+                            ▼
                 ┌────────────────────────┐
                 │  Phase 1: 문헌조사      │
                 │  literature-reviewer   │
@@ -274,8 +334,9 @@ description: >
 
 | Phase | 에이전트 | 입력 파일 | 출력 파일 |
 |---|---|---|---|
-| 1 | literature-reviewer | 사용자 요청 | `01_literature_review.md`, `references.bib` |
-| 2 | research-designer | `01_literature_review.md`, `references.bib`, (REVISE 시) `05_review_report.md` | `02_research_design.md` |
+| 0 | intake-interviewer | 사용자 시드(`{주제}/{목적}/{모드}/{작업경로}`), (선택) `{이전 작업경로}/00_intake_spec.md` | `00_intake_spec.md` (immutable) |
+| 1 | literature-reviewer | `00_intake_spec.md` | `01_literature_review.md`, `references.bib` |
+| 2 | research-designer | `00_intake_spec.md`, `01_literature_review.md`, `references.bib`, (REVISE 시) `05_review_report.md` | `02_research_design.md` |
 | 3 | research-executor | `02_research_design.md` | `code/`, `figures/`, `tables/`, `03_execution_log.md` |
 | 4 | reviewer (검토) | `02_research_design.md`, `03_execution_log.md`, `figures/`, `tables/` | `05_review_report.md`, (PASS-WITH-FINDINGS 시) `findings_for_next_version.md` |
 | 5 | paper-writer | `01~03` 전부, `figures/`, `tables/`, `references.bib` | `04_paper_draft.md` |
@@ -289,6 +350,8 @@ description: >
 
 | 루프백 유형 | 트리거 | 최대 횟수 | 초과 시 |
 |---|---|---|---|
+| **Phase 0 인테이크 라운드** | Ambiguity > 임계값 | 8라운드 (하드캡) | 사용자에게 (A) 차원 전환 / (B) 강제 봉인 / (C) 중단 옵션 제시 |
+| **Phase 0 정체** | Ambiguity 감소 < 0.03 | 2회 연속 | 위 동일 옵션 제시 |
 | **설계 REVISE** | reviewer가 REVISE 판정 | 2회 | 사용자에게 현 상태 보고, 방향 재설정 요청 |
 | **PASS-WITH-FINDINGS** | reviewer가 PASS-WITH-FINDINGS 판정 | (루프백 아님) | `findings_for_next_version.md` 생성 후 Phase 5로 진행. 후속 버전에서 사용자가 이 파일을 제공하면 research-designer가 참조 |
 | **추가 문헌 조사** | research-designer가 문헌 부족 보고 | 1회 | 가용 문헌 범위에서 설계 진행 |
@@ -300,6 +363,9 @@ description: >
 
 | Phase | 에러 유형 | 심각도 | 대응 |
 |---|---|---|---|
+| 0 | 8라운드 임계값 미달 | 높음 | 사용자에게 (A) 차원 전환 / (B) 강제 봉인 / (C) 중단 옵션 제시 |
+| 0 | 정체 2회 연속 | 중간 | 동일 옵션 제시 |
+| 0 | 사용자가 봉인 후 변경 요청 | 중간 | spec에 "변경 이력" 추가 + 영향 분석 안내 + 영향 받는 후속 단계 재실행 제안 |
 | 1 | 검색 결과 부족 | 중간 | 키워드 확장, 인접 분야 검색 |
 | 1 | 완전 중복 연구 발견 | 높음 | 사용자에게 즉시 보고, 차별화 방향 제안 |
 | 2 | 설계 정보 부족 | 중간 | 사용자에게 질문 |
@@ -341,6 +407,24 @@ description: >
 - **이전 버전**: {이전 작업경로 또는 "없음 (신규)"}
 
 ---
+
+## [Phase 0: Socratic 인테이크] {timestamp}
+### intake-interviewer (Sonnet)
+- 시드 입력: 주제/목적/모드/작업경로 요약
+- 모드별 임계값: {0.20 또는 0.35}
+- 라운드별 점수 추적:
+
+| 라운드 | 목적 | 제약 | 성공기준 | 배경 | Ambiguity | 정체 |
+|---|---|---|---|---|---|---|
+| 0 (초기) | 0.x | 0.x | 0.x | 0.x | 0.x | - |
+| 1 | 0.x | 0.x | 0.x | 0.x | 0.x | - |
+| ... | ... | ... | ... | ... | ... | ... |
+
+- 라운드별 질문/답변 요약:
+  - R1: Q={...} / A={...} / 갱신된 차원={...}
+  - ...
+- 봉인 결정: {N}라운드에서 임계값 통과 / 강제 봉인 / 중단
+- 핵심 미결 사항 (Open but Acceptable): {...}
 
 ## [Phase 1: 문헌조사] {timestamp}
 ### literature-reviewer

@@ -89,3 +89,9 @@ GOES XRS 시계열에서 M급 이상 플레어를 24시간 전에 예측하는 M
 1. "연구 목적을 알려주세요."
 2. "연구 모드를 선택해주세요. [1] 탐색형 [2] 심층형 [3] 전체"
 3. "결과물을 저장할 작업 경로를 알려주세요."
+
+---
+
+## 참고 (Acknowledgements)
+
+- **Phase 0 Socratic 인테이크 설계**는 [Q00/ouroboros](https://github.com/Q00/ouroboros)의 *specification-first* 접근법, 특히 **Ambiguity 점수화 → 임계값 게이트 → immutable spec 봉인** 루프에서 영감을 받아 본 하네스의 연구 워크플로우(목적/제약/성공기준/배경 4차원)에 맞춰 적용했습니다.

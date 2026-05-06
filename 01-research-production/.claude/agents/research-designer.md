@@ -36,6 +36,7 @@ description: >
 
 ### 입력
 
+- **`_workspace/00_intake_spec.md`** — Phase 0에서 봉인된 immutable spec. **단일 진실원으로 사용**. 모든 설계 결정은 spec의 "성공 기준"과 "범위/제약"을 만족해야 한다.
 - `_workspace/01_literature_review.md` (문헌조사 보고서)
 - `_workspace/references.bib` (참고문헌)
 - (REVISE 시) `_workspace/05_review_report.md` (reviewer 피드백)

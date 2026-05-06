@@ -60,10 +60,10 @@ qa-companion (Q&A 대기 — 사용자의 후속 질문에 답변)
 
 | 에이전트 | 출력 파일 |
 |---|---|
-| paper-fetcher | `{작업경로}/00_paper_source.md`, `{작업경로}/papers/` (원본 파일) |
-| chapter-translator | `{작업경로}/01_chapter_translations/ch{N}_{섹션명}.md` |
-| figure-analyst | `{작업경로}/06_figure_analysis.md` |
-| context-harmonizer | `{작업경로}/02_full_translation.md` |
+| paper-fetcher | `{작업경로}/00_paper_source.md`, `{작업경로}/papers/` (원본 파일), `{작업경로}/papers/figures/page-NNN.png` (PDF 페이지 렌더링) |
+| chapter-translator | `{작업경로}/01_chapter_translations/ch{N}_{섹션명}.md` (수식은 LaTeX 문법) |
+| figure-analyst | `{작업경로}/06_figure_analysis.md` (이미지 자체 시각 해석) |
+| context-harmonizer | `{작업경로}/02_full_translation.md`, `{작업경로}/02_full_translation.tex`, `{작업경로}/02_full_translation.pdf` |
 | reference-analyst | `{작업경로}/03_reference_analysis.md`, `{작업경로}/04_must_read_papers.md` |
 | qa-companion | `{작업경로}/05_qa_log.md` |
 
@@ -78,8 +78,9 @@ qa-companion (Q&A 대기 — 사용자의 후속 질문에 답변)
 2. **원문 충실**: 원문의 의미, 논리 구조, 어조를 있는 그대로 전달한다.
 3. **번역체 지양**: "~하는 것이다", "~에 의해" 같은 어색한 번역체를 피하고 자연스러운 한국어로 옮긴다.
 4. **전문 용어 처리**: 학술 전문용어는 한국어(영어 원문) 형태로 병기한다. 예: "합성곱 신경망(Convolutional Neural Network)"
-5. **수식/그림/표**: 수식은 LaTeX 형태로 보존, 그림/표는 캡션과 설명을 번역한다. 그림이 포함된 논문은 figure-analyst가 시각적으로 분석하여 상세 설명을 제공한다.
-6. **병렬 번역 후 통합**: 챕터별로 병렬 번역한 뒤, 전체를 합쳐 용어 통일과 문맥 흐름을 조정한다.
+5. **수식 LaTeX + PDF 컴파일**: 수식은 `$...$`/`\[...\]`/`\begin{equation}` 등 정확한 LaTeX 문법으로 작성하고, 통합 단계에서 `tectonic`(XeLaTeX) + Noto CJK KR로 PDF까지 컴파일한다. 그림/표는 캡션과 설명을 번역한다.
+6. **이미지 자체 해석**: 그림이 포함된 논문은 paper-fetcher가 `pdftoppm`으로 PNG를 추출하고, figure-analyst가 캡션을 보지 않은 상태에서 이미지를 직접 시각 분석한 뒤 캡션과 대조한다.
+7. **병렬 번역 후 통합**: 챕터별로 병렬 번역한 뒤, 전체를 합쳐 용어 통일과 문맥 흐름을 조정한다.
 
 ## 사용 언어
 

@@ -5,18 +5,22 @@
 
 ## 에이전트 팀 구성표
 
-| 에이전트 | 역할 | 설명 |
-|---|---|---|
-| **literature-reviewer** | 문헌조사 | arXiv/ADS 검색, 선행연구 요약, 중복 판별, 연구 갭 식별 |
-| **research-designer** | 연구설계 | 가설 수립, 데이터/모델/실험 계획, 평가 지표 설계 |
-| **research-executor** | 실험실행 | Python 코드 작성/실행, 데이터 처리, Figure/Table 생성 |
-| **paper-writer** | 논문작성 | 논문/초록/리포트 작성, Figure+Table 5개 이내 선별 |
-| **reviewer** | 품질검토 | 설계 vs 결과 대조 검토, PASS/REVISE 판정, 레퍼리 심사 |
+| 에이전트 | 역할 | 모델 | 설명 |
+|---|---|---|---|
+| **intake-interviewer** | Phase 0 인테이크 | Sonnet (claude-sonnet-4-6) | Ouroboros식 Ambiguity 점수로 모호성 해소, immutable spec 봉인 |
+| **literature-reviewer** | 문헌조사 | (기본) | arXiv/ADS 검색, 선행연구 요약, 중복 판별, 연구 갭 식별 |
+| **research-designer** | 연구설계 | (기본) | 가설 수립, 데이터/모델/실험 계획, 평가 지표 설계 |
+| **research-executor** | 실험실행 | (기본) | Python 코드 작성/실행, 데이터 처리, Figure/Table 생성 |
+| **paper-writer** | 논문작성 | (기본) | 논문/초록/리포트 작성, Figure+Table 5개 이내 선별 |
+| **reviewer** | 품질검토 | (기본) | 설계 vs 결과 대조 검토, PASS/REVISE 판정, 레퍼리 심사 |
 
 ## 실행 모드: 에이전트 팀
 
 ```
 사용자 요청
+    │
+    ▼
+intake-interviewer (Phase 0, Sonnet, Ambiguity 루프) → 00_intake_spec.md (immutable)
     │
     ▼
 literature-reviewer  →  research-designer  →  research-executor  →  reviewer(검토)
@@ -33,6 +37,7 @@ literature-reviewer  →  research-designer  →  research-executor  →  review
 ## 필수 입력 정책
 
 파이프라인 시작 전 4가지 필수 항목을 확보한다. 누락 시 되물어서 확보한다.
+**이 4항목은 Phase 0 Socratic 인테이크의 시드(seed)로 사용되며, 실제 연구 의도 명료화는 `intake-interviewer`가 수행한다.**
 
 | 항목 | 변수 | 용도 |
 |---|---|---|
@@ -42,6 +47,22 @@ literature-reviewer  →  research-designer  →  research-executor  →  review
 | 작업 경로 | `{작업경로}` | 결과물 저장 위치 |
 
 상세 안내는 `README.md` 참조.
+
+## Phase 0: Socratic 인테이크 (Ouroboros식 모호성 해소)
+
+`intake-interviewer` 에이전트가 Sonnet 모델로 사용자와 Q&A 라운드를 반복하여
+Ambiguity 점수를 임계값 이하로 떨어뜨린 뒤 `00_intake_spec.md`를 immutable spec으로 봉인한다.
+
+| 모드 | Ambiguity 임계값 | 의미 |
+|---|---|---|
+| 탐색형 (Survey) | ≤ 0.35 | 65% 명료 |
+| 심층형 (Deep Dive) | ≤ 0.20 | 80% 명료 |
+| 전체 (Full) | ≤ 0.20 | 80% 명료 |
+
+- 4차원: 목적(35%) / 제약(25%) / 성공기준(30%) / 배경(10%) — 이전 버전 감지 시 배경 가중치 25%로 상향
+- 하드캡: 8라운드 / 정체(0.03 미만 감소) 2회 연속 시 사용자에게 옵션 제시
+- 봉인 후 `literature-reviewer`와 `research-designer`는 `00_intake_spec.md`를 단일 진실원으로 참조한다
+- 봉인 후 변경은 사용자 명시 승인 시에만 "변경 이력" 추가 방식으로 허용
 
 ## 연구 모드
 
@@ -62,6 +83,7 @@ literature-reviewer  →  research-designer  →  research-executor  →  review
 
 | 에이전트 | 출력 파일 |
 |---|---|
+| intake-interviewer | `{작업경로}/00_intake_spec.md` (immutable) |
 | literature-reviewer | `{작업경로}/01_literature_review.md`, `{작업경로}/references.bib` |
 | research-designer | `{작업경로}/02_research_design.md` |
 | research-executor | `{작업경로}/code/`, `{작업경로}/figures/`, `{작업경로}/tables/`, `{작업경로}/03_execution_log.md`, (크로스-버전 비교 시) `{작업경로}/tables/version_comparison.md` |
