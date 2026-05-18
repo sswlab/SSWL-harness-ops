@@ -1,0 +1,8 @@
+{
+  "_comment": "이 파일을 'settings.local.json'으로 복사한 뒤 토큰을 채우세요. settings.local.json은 보통 커밋되지 않습니다.",
+  "env": {
+    "S2_API_KEY": "여기에-Semantic-Scholar-API-키",
+    "ADS_API_TOKEN": "여기에-NASA-ADS-Bearer-토큰",
+    "ADS_API_BASE": "https://api.adsabs.harvard.edu/v1"
+  }
+}
