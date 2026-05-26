@@ -5,6 +5,42 @@
 
 ---
 
+## 슬래시 커맨드 프로토콜 — `/goal` (STRICTLY ENFORCED)
+
+사용자 입력이 **`/goal ` 으로 시작**하면 (대소문자 무관, 앞뒤 공백 허용),
+**최대 노력(maximum-effort) 모드**로 파이프라인을 실행한다. 이 프로토콜은
+Claude Code의 슬래시 커맨드 시스템이 자동 인식하지 못하는 환경(예: 웹 채팅)
+에서도 모델이 텍스트 인식만으로 적용해야 한다.
+
+처리 순서:
+
+1. `/goal` 토큰을 제거하고 나머지를 **연구 시드(주제/목적/경로 등)** 로 파싱.
+2. 누락 항목이 있으면 **한 번에** 모두 되묻기.
+3. `research-orchestrator` 스킬을 호출하되, 호출 프롬프트 맨 앞에 아래
+   OVERRIDE 블록을 첨부하고, 오케스트레이터는 이를 각 에이전트에 전파한다.
+
+```
+[GOAL-MODE OVERRIDE — STRICTLY ENFORCED]
+- 모드: 전체 (Full Pipeline) 강제 (사용자가 다른 모드를 명시해도 격상)
+- Ambiguity 임계값: ≤ 0.10  (전체 기본 0.20 → 0.10, 95% 명료)
+- thinking: max (전 에이전트)
+- 각 Phase 종료 시 `## Self-Critique` 섹션 의무 첨부
+- literature-reviewer: 후보 최소 50편, top 15 상세 요약
+- reviewer 루프백 (Phase 4): 최대 2회 (기존 유지)
+- paper-writer 리비전 (Phase 5): 기존 구성 유지 — 초안 수준, 다듬기 최소화
+- research-designer: 대안 설계 ≥ 3개 비교 후 선택 (선택 근거 기록)
+- research-executor: 대안 방법 ≥ 3개 + Baseline ≥ 2개 + Ablation + Sensitivity + 통계 유의성 검증 + 실패 케이스 보고
+- 산출물: 실험은 분석용 품질(baseline·대안·ablation 한 화면 비교), 논문은 초안 수준
+- 시간 제약 없음 — 깊이는 Phase 2~3 (설계·실행)에 집중 투입
+```
+
+4. 사용자에게 한 줄 통지: `🎯 최대 노력 모드(Maximum Effort)로 실행합니다 — 실험 설계·실행에 깊이 집중, 논문은 초안 수준 유지. 시간 제약 없음. 결과까지 길게 걸릴 수 있습니다.`
+5. 진행 로그를 자동 출력하며 다음 단계로 이행 (불필요한 중간 확인 금지).
+
+상세 정의: `.claude/commands/goal.md`.
+
+---
+
 ## 필수 입력 항목
 
 ### 1. 연구 주제

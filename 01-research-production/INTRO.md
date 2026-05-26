@@ -47,4 +47,34 @@ GOES XRS 시계열에서 M급 이상 플레어를 24시간 전에 예측하는 M
 
 자세한 운영 방식·각 Phase 비중은 하네스 루트의 `README.md` 참조.
 
+---
+
+### 🎯 최대 노력 모드 — `/goal`
+
+깊이 우선·시간 제약 없는 결과가 필요하면 슬래시 커맨드를 쓰세요.
+
+```
+/goal STIX 단독으로 GOES 등급 추정 모델 만들어줘.
+목적: Solar Orbiter 독립 분류 역량 확보
+경로: /home/youn_j/projects/stix-goes/_workspace
+```
+
+`/goal`은 다음을 강제합니다:
+
+**공통**
+- 연구 모드 **전체(Full Pipeline)**
+- Ambiguity 임계값 **≤ 0.10** (95% 명료)
+- 모든 에이전트 **thinking max**
+- 각 Phase에 **Self-Critique** 섹션 추가
+- 문헌 **50편 이상** (top 15 상세 요약)
+
+**실험 설계·실행 (Phase 2~3) — 강하게 밀어붙임**
+- research-designer: **대안 설계 ≥ 3개** 비교 후 선택
+- research-executor: **대안 방법 ≥ 3개** + **Baseline ≥ 2개** + **Ablation** + **Sensitivity** + **통계 유의성 검증** + **실패 케이스 보고**
+
+**논문 작성 (Phase 5) — 기존 구성 유지**
+- reviewer 루프백 / paper-writer 리비전 모두 **기존 (최대 2회)** — 초안 수준 목표. 다듬기는 별도 사이클이나 `06-paper-editor`에서.
+
+> ⚠ 결과까지 길게 걸릴 수 있고, 토큰 소비량도 매우 큽니다 (특히 Phase 2~3).
+
 준비되시면 위 템플릿대로 입력해 주세요. 🚀
